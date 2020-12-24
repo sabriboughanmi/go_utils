@@ -1,15 +1,16 @@
 package userprivileges
 
 import (
-	"T4uLabs/utils"
+
 	"context"
 	"firebase.google.com/go/auth"
+	utils "../.."
 )
 
 //UserPrivilegeClient is a client extending the firebase auth package to manage users Privileges
 type UserPrivilegeClient struct {
-	authClien *auth.Client
-	ctx context.Context
+	authClient *auth.Client
+	ctx        context.Context
 }
 
 func GetUserPrivilegeClient (authClient *auth.Client, ctx context.Context) UserPrivilegeClient {
@@ -31,7 +32,7 @@ type Privilege uint16
 //HasPrivileges checks if a user has specified privileges
 func (client *UserPrivilegeClient)HasPrivilegesByID(userID string, privileges ...Privilege) (bool,error) {
 
-	userRecord, err := client.authClien.GetUser(client.ctx, userID)
+	userRecord, err := client.authClient.GetUser(client.ctx, userID)
 	if err != nil {
 		return false,err
 	}
@@ -81,7 +82,7 @@ func (client *UserPrivilegeClient)HasPrivileges(userRecord *auth.UserRecord, pri
 //SetUserPrivilegesByID gives a user some privileges
 func (client *UserPrivilegeClient)SetUserPrivilegesByID(userID string, privileges ...Privilege) error {
 
-	userRecord, err := client.authClien.GetUser(client.ctx, userID)
+	userRecord, err := client.authClient.GetUser(client.ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func (client *UserPrivilegeClient)SetUserPrivilegesByID(userID string, privilege
 
 	userRecord.CustomClaims[CustomClaimsPrivileges] = userPrivileges
 
-	if err = client.authClien.SetCustomUserClaims(client.ctx, userID, userRecord.CustomClaims); err != nil {
+	if err = client.authClient.SetCustomUserClaims(client.ctx, userID, userRecord.CustomClaims); err != nil {
 		return err
 	}
 	return nil
@@ -119,7 +120,7 @@ func (client *UserPrivilegeClient)SetUserPrivileges(userRecord *auth.UserRecord,
 
 	userRecord.CustomClaims[CustomClaimsPrivileges] = userPrivileges
 
-	if err := client.authClien.SetCustomUserClaims(client.ctx, userRecord.UID, userRecord.CustomClaims); err != nil {
+	if err := client.authClient.SetCustomUserClaims(client.ctx, userRecord.UID, userRecord.CustomClaims); err != nil {
 		return err
 	}
 	return nil
@@ -131,7 +132,7 @@ func (client *UserPrivilegeClient)SetUserPrivileges(userRecord *auth.UserRecord,
 //GetUserPrivilegesByID returns user Granted privileges
 func (client *UserPrivilegeClient)GetUserPrivilegesByID(userID string) ( []Privilege,error) {
 
-	userRecord, err := client.authClien.GetUser(client.ctx, userID)
+	userRecord, err := client.authClient.GetUser(client.ctx, userID)
 	if err != nil {
 		return nil,err
 	}

@@ -2,7 +2,7 @@ package utils
 
 import "encoding/json"
 
-//AnythingToJSON : Incode any Type to Json string
+//AnythingToJSON : encode any Type to Json string
 func AnythingToJSON(anything interface{}) (string, error) {
 
 	resultBytes, err := json.Marshal(anything)
