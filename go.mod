@@ -1,4 +1,4 @@
-module v2
+module utils
 
 go 1.13
 
