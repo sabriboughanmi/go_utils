@@ -1,10 +1,9 @@
 package userprivileges
 
 import (
-
+	utils "../.."
 	"context"
 	"firebase.google.com/go/auth"
-	utils "../.."
 )
 
 //UserPrivilegeClient is a client extending the firebase auth package to manage users Privileges
