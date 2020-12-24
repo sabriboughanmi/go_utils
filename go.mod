@@ -1,4 +1,4 @@
-module goutils.t4ulabs.com/v0
+module github.com/Opeth001/go_utils
 
 go 1.13
 
