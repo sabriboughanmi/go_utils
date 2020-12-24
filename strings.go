@@ -1,4 +1,4 @@
-package utils
+package go_utils
 
 import (
 	"strings"

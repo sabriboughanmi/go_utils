@@ -3,23 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/T4uLabs.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/userprivileges/userprivileges.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/userprivileges/userprivileges.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/emails/emails.go" beforeDir="false" afterPath="$PROJECT_DIR$/emails/emails.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/ffmpeg/ffmpeg.go" beforeDir="false" afterPath="$PROJECT_DIR$/ffmpeg/ffmpeg.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/firebase/cloudfunctions/cloudfunctions.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/cloudfunctions/cloudfunctions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/firebase/firebase.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/firebase.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/firebase/storage/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/storage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/firebase/userprivileges/userprivileges.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/userprivileges/userprivileges.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/firebase/userprivileges/utilities.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/userprivileges/utilities.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/json.go" beforeDir="false" afterPath="$PROJECT_DIR$/json.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/math/arrays/difference.go" beforeDir="false" afterPath="$PROJECT_DIR$/math/arrays/difference.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/math/arrays/intersection.go" beforeDir="false" afterPath="$PROJECT_DIR$/math/arrays/intersection.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/math/math.go" beforeDir="false" afterPath="$PROJECT_DIR$/math/math.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/os/os.go" beforeDir="false" afterPath="$PROJECT_DIR$/os/os.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/strings.go" beforeDir="false" afterPath="$PROJECT_DIR$/strings.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/utilities.go" beforeDir="false" afterPath="$PROJECT_DIR$/utilities.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/json.go" beforeDir="false" afterPath="$PROJECT_DIR$/json.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/strings.go" beforeDir="false" afterPath="$PROJECT_DIR$/strings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utilities.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

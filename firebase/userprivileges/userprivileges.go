@@ -1,7 +1,7 @@
 package userprivileges
 
 import (
-	utils "../../utils"
+	utils "../.."
 	"context"
 	"firebase.google.com/go/auth"
 )

@@ -11,15 +11,15 @@ import (
 )
 
 //StorageFileContentType represents a file Content type in Cloud Storage in order to be recognized by the browser
-type StorageFileContentType string
+type FileContentType string
 
 const (
-	ImageGif  StorageFileContentType = "image/gif"
-	ImageJPEG StorageFileContentType = "image/jpeg"
+	ImageGif  FileContentType = "image/gif"
+	ImageJPEG FileContentType = "image/jpeg"
 
-	VideoMP4 StorageFileContentType = "video/mp4"
-	VideoMOV StorageFileContentType = "video/mov"
-	VideoAVI StorageFileContentType = "video/avi"
+	VideoMP4 FileContentType = "video/mp4"
+	VideoMOV FileContentType = "video/mov"
+	VideoAVI FileContentType = "video/avi"
 )
 
 /*
@@ -127,7 +127,7 @@ func StorageMoveFile(bucket, srcName, dstName string, client *storage.Client, ct
 }
 
 // StorageCreateFile creates a file in Google Cloud Storage.
-func StorageCreateFile(bucket, fileName string, content []byte, contentType StorageFileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
+func StorageCreateFile(bucket, fileName string, content []byte, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
 	wc := client.Bucket(bucket).Object(fileName).NewWriter(ctx)
 	defer wc.Close()
 
