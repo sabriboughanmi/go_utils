@@ -1,4 +1,4 @@
-module com.t4ulabs.go_utils
+module github.com/sabriboughanmi/go_utils
 
 go 1.13
 
