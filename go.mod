@@ -1,4 +1,4 @@
-module com.t4ulabs.utils
+module com.t4ulabs.go_utils
 
 go 1.13
 
