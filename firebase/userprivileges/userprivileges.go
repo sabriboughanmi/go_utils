@@ -21,7 +21,7 @@ func GetUserPrivilegeClient (authClient *auth.Client, ctx context.Context) UserP
 
 
 //CustomClaimsPrivileges is the key to access Auth.UserRecord Privileges.
-//Note! its forbidden to add "privileges" key to a firebase.auth User when extending userprivileges Package
+//Note! its forbidden to add "privileges" key to a firebase.auth User when extending userprofile Package
 var CustomClaimsPrivileges = "privileges"
 
 //Privilege is type (uint16) used to define users Privileges
