@@ -35,8 +35,8 @@ func GetDownloadURL(bucket, storagePath string) string {
 	return ReplaceKeys(staticUrl, keyValues)
 }*/
 
-//StorageFileExists Checks if a Storage File Exists
-func StorageFileExists(bucket, storagePath string, client *storage.Client, ctx context.Context) (bool, error) {
+//FileExists Checks if a Storage File Exists
+func FileExists(bucket, storagePath string, client *storage.Client, ctx context.Context) (bool, error) {
 
 	bucketHandle := client.Bucket(bucket)
 	objectHandle := bucketHandle.Object(storagePath)
@@ -45,12 +45,11 @@ func StorageFileExists(bucket, storagePath string, client *storage.Client, ctx c
 	}
 
 	return true, nil
-
 }
 
-//StorageLoadFileInTempPath Loads a file from Storage to an OS path
+//LoadFileInTempPath Loads a file from Storage to an OS path
 //Note! it's the caller responsibility to Remove to defer os.Remove() on the returned path if not empty to ensure the file is cleaned up
-func StorageLoadFileInTempPath(bucket, storagePath string, client *storage.Client, ctx context.Context) (string, error) {
+func LoadFileInTempPath(bucket, storagePath string, client *storage.Client, ctx context.Context) (string, error) {
 
 	bucketHandle := client.Bucket(bucket)
 	objectHandle := bucketHandle.Object(storagePath)
@@ -84,8 +83,8 @@ func StorageLoadFileInTempPath(bucket, storagePath string, client *storage.Clien
 	return tmpFile.Name(), nil
 }
 
-//StorageLoadFileAtPath Loads a file from Storage to an OS path
-func StorageLoadFileAtPath(bucket, storagePath, dstPath string, client *storage.Client, ctx context.Context) error {
+//LoadFileAtPath Loads a file from Storage to an OS path
+func LoadFileAtPath(bucket, storagePath, dstPath string, client *storage.Client, ctx context.Context) error {
 
 	bucketHandle := client.Bucket(bucket)
 	objectHandle := bucketHandle.Object(storagePath)
@@ -112,8 +111,8 @@ func StorageLoadFileAtPath(bucket, storagePath, dstPath string, client *storage.
 	return nil
 }
 
-// StorageMoveFile moves an object into another location.
-func StorageMoveFile(bucket, srcName, dstName string, client *storage.Client, ctx context.Context) error {
+// MoveFile moves an object into another location.
+func MoveFile(bucket, srcName, dstName string, client *storage.Client, ctx context.Context) error {
 	src := client.Bucket(bucket).Object(srcName)
 	dst := client.Bucket(bucket).Object(dstName)
 
@@ -126,8 +125,8 @@ func StorageMoveFile(bucket, srcName, dstName string, client *storage.Client, ct
 	return nil
 }
 
-// StorageCreateFile creates a file in Google Cloud Storage.
-func StorageCreateFile(bucket, fileName string, content []byte, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
+// CreateFile creates a file in Google Cloud Storage.
+func CreateFile(bucket, fileName string, content []byte, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
 	wc := client.Bucket(bucket).Object(fileName).NewWriter(ctx)
 	defer wc.Close()
 
@@ -141,6 +140,5 @@ func StorageCreateFile(bucket, fileName string, content []byte, contentType File
 	if _, err := wc.Write(content); err != nil {
 		return fmt.Errorf("createFile: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
 	}
-
 	return nil
 }
