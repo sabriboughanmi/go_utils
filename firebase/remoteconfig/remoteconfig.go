@@ -250,7 +250,6 @@ type RemoteConfig struct {
 
 //GetValue safely returns a value for a configKey by ConditionName
 func (p Parameters) GetValue(configKey string, condition ConditionName) (string, bool) {
-
 	if p == nil {
 		return "", false
 	}
@@ -268,7 +267,6 @@ func (p Parameters) GetValue(configKey string, condition ConditionName) (string,
 
 //GetDefaultValue safely returns a the Default Value for a configKey
 func (p Parameters) GetDefaultValue(configKey string) (string, bool) {
-
 	if p == nil {
 		return "", false
 	}
