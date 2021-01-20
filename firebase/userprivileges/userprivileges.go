@@ -39,7 +39,7 @@ func (client *UserPrivilegeClient)HasPrivilegesByID(userID string, privileges ..
 	var userPrivileges []Privilege
 
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err =  utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err =  utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return false,err
 		}
 
@@ -60,7 +60,7 @@ func (client *UserPrivilegeClient)HasPrivileges(userRecord *auth.UserRecord, pri
 	var userPrivileges []Privilege
 
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err := utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err := utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return false
 		}
 
@@ -88,7 +88,7 @@ func (client *UserPrivilegeClient)SetUserPrivilegesByID(userID string, privilege
 
 	var userPrivileges []Privilege
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err = utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err = utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return err
 		}
 	}
@@ -109,7 +109,7 @@ func (client *UserPrivilegeClient)SetUserPrivileges(userRecord *auth.UserRecord,
 
 	var userPrivileges []Privilege
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err := utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err := utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return err
 		}
 	}
@@ -138,7 +138,7 @@ func (client *UserPrivilegeClient)GetUserPrivilegesByID(userID string) ( []Privi
 
 	var userPrivileges []Privilege
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err = utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err = utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return nil,err
 		}
 	}
@@ -149,7 +149,7 @@ func (client *UserPrivilegeClient)GetUserPrivilegesByID(userID string) ( []Privi
 func (client *UserPrivilegeClient)GetUserPrivileges(userRecord *auth.UserRecord) []Privilege {
 	var userPrivileges []Privilege
 	if value, exist := userRecord.CustomClaims[CustomClaimsPrivileges]; exist {
-		if err := utils.InterfaceToType(value, &userPrivileges); err != nil {
+		if err := utils.InterfaceAs(value, &userPrivileges); err != nil {
 			return nil
 		}
 	}
