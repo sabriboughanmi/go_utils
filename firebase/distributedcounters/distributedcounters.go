@@ -134,7 +134,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 		}
 
 		//Check Usage of Internal Keys
-		for key,_ := range  defaultStructure{
+		for key := range  defaultStructure{
 			checkInternalFieldsUsage(ShardField(key))
 		}
 
@@ -149,18 +149,3 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 
 	return wr, err
 }
-
-/*
-// UpdateCounter increments a randomly picked shard.
-func (c *distributedCounter) UpdateCounter(ctx context.Context, docRef *firestore.DocumentRef) (*firestore.WriteResult, error) {
-	rand.Seed(time.Now().UnixNano())
-
-	docID := strconv.Itoa(rand.Intn(c.NumShards))
-
-	shardRef := docRef.Collection(c.ShardName).Doc(docID)
-	return shardRef.Update(ctx, []firestore.Update{
-		{Path: "c", Value: firestore.Increment(1)},
-		{Path: "lu", Value: time.Now()},
-	})
-}
-*/
