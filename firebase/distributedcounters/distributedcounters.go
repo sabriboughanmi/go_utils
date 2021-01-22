@@ -128,7 +128,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 
 	//Create New Shard if not existing (add missing Default Fields)
 	if status.Code(err) == codes.NotFound {
-		defaultStructure := make(map[ShardField]interface{})
+		defaultStructure := make(map[string]interface{})
 		if err = utils.InterfaceAs(c.defaultShardStructure, &defaultStructure); err != nil {
 			return nil, fmt.Errorf("error mapping default shard structure for creation!: %v", err)
 		}
@@ -136,7 +136,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 		//Update Fields in defaultStructure
 		for i:=0; i<len(updatedFields); i++{
 			updatedField := updatedFields[i]
-			defaultStructure[ShardField(updatedField.Path)] = updatedField.Value
+			defaultStructure[updatedField.Path] = updatedField.Value
 		}
 
 		return shardRef.Set(ctx, defaultStructure)
