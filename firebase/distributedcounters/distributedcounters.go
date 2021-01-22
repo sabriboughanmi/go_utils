@@ -147,7 +147,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 			})
 		}
 
-		return shardRef.Update(ctx, updatedFields)
+		return shardRef.Set(ctx, updatedFields)
 	}
 
 	return wr, err
