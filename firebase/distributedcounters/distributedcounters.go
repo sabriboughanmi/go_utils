@@ -51,8 +51,8 @@ type DistributedShard map[ShardField]interface{}
 // to realize counter with high frequency.
 //This Struct will be created by every Incremental Section (Videos Likes, Comments Likes ..)
 type distributedCounterInstance struct {
-	ShardName             string
-	NumShards             int
+	shardName             string
+	numShards             int
 	shardFields           DistributedShard
 	defaultShardStructure interface{}
 }
@@ -62,8 +62,8 @@ type distributedCounterInstance struct {
 //CreateDistributedCounter returns a CreateDistributedCounter to manage Shards
 func (dc *DistributedCounters)CreateDistributedCounter() distributedCounterInstance {
 	return distributedCounterInstance{
-		ShardName:             dc.ShardName,
-		NumShards:             dc.ShardCount,
+		shardName:             dc.ShardName,
+		numShards:             dc.ShardCount,
 		shardFields:           make(map[ShardField]interface{}),
 		defaultShardStructure: dc.ShardDefaultStructure,
 	}
@@ -89,10 +89,10 @@ func (c *distributedCounterInstance) IncrementField(field ShardField, value inte
 // CreateShards creates a given number of shards as sub-collection of the specified document.
 //(This operation need to be done once per Document or it will reinitialize all shards Data )
 func (c *distributedCounterInstance) CreateShards(ctx context.Context, docRef *firestore.DocumentRef, shardData interface{}) error {
-	colRef := docRef.Collection(c.ShardName)
+	colRef := docRef.Collection(c.shardName)
 
 	// Initialize each shard with count=0
-	for num := 0; num < c.NumShards; num++ {
+	for num := 0; num < c.numShards; num++ {
 		if _, err := colRef.Doc(strconv.Itoa(num)).Set(ctx, shardData); err != nil {
 			return err
 		}
@@ -108,8 +108,8 @@ func (c *distributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 		return nil, NoShardFieldSpecified
 	}
 	rand.Seed(time.Now().UnixNano())
-	docID := strconv.Itoa(rand.Intn(c.NumShards))
-	shardRef := docRef.Collection(c.ShardName).Doc(docID)
+	docID := strconv.Itoa(rand.Intn(c.numShards))
+	shardRef := docRef.Collection(c.shardName).Doc(docID)
 
 	//preallocate the slice for performance reasons
 	updatedFields := make([]firestore.Update, updateCount+2)
