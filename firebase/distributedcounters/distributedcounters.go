@@ -13,6 +13,14 @@ import (
 	"time"
 )
 
+//DistributedCounters used to initialize Distributed Counters
+type DistributedCounters struct {
+	ShardCount int
+	ShardName  string
+	ShardDefaultStructure interface{}
+}
+
+
 const (
 	documentID       ShardField = "did" //This field is used to Track/Order Shards by their Parent Document for roll-up Process
 	lastRollUpUpdate ShardField = "lru" // This Field is used to Track Last roll-up Updates to skip un-updated Shards
@@ -39,28 +47,30 @@ type ShardField string
 
 type DistributedShard map[ShardField]interface{}
 
-// distributedCounter is a collection of documents (shards)
+// distributedCounterInstance is a collection of documents (shards)
 // to realize counter with high frequency.
 //This Struct will be created by every Incremental Section (Videos Likes, Comments Likes ..)
-type distributedCounter struct {
+type distributedCounterInstance struct {
 	ShardName             string
 	NumShards             int
 	shardFields           DistributedShard
 	defaultShardStructure interface{}
 }
 
+
+
 //CreateDistributedCounter returns a CreateDistributedCounter to manage Shards
-func CreateDistributedCounter(shardName string, numShards int, defaultShard interface{}) distributedCounter {
-	return distributedCounter{
-		ShardName:             shardName,
-		NumShards:             numShards,
+func (dc *DistributedCounters)CreateDistributedCounter() distributedCounterInstance {
+	return distributedCounterInstance{
+		ShardName:             dc.ShardName,
+		NumShards:             dc.ShardCount,
 		shardFields:           make(map[ShardField]interface{}),
-		defaultShardStructure: defaultShard,
+		defaultShardStructure: dc.ShardDefaultStructure,
 	}
 }
 
 //AddFieldForUpdate Adds a Shard.Field for updated
-func (c *distributedCounter) AddFieldForUpdate(field ShardField, value interface{}) {
+func (c *distributedCounterInstance) AddFieldForUpdate(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
 	c.shardFields[field] = value
 }
@@ -71,14 +81,14 @@ func (c *distributedCounter) AddFieldForUpdate(field ShardField, value interface
 //   int, int8, int16, int32, int64
 //   uint8, uint16, uint32
 //   float32, float64
-func (c *distributedCounter) IncrementField(field ShardField, value interface{}) {
+func (c *distributedCounterInstance) IncrementField(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
 	c.shardFields[field] = firestore.Increment(value)
 }
 
 // CreateShards creates a given number of shards as sub-collection of the specified document.
 //(This operation need to be done once per Document or it will reinitialize all shards Data )
-func (c *distributedCounter) CreateShards(ctx context.Context, docRef *firestore.DocumentRef, shardData interface{}) error {
+func (c *distributedCounterInstance) CreateShards(ctx context.Context, docRef *firestore.DocumentRef, shardData interface{}) error {
 	colRef := docRef.Collection(c.ShardName)
 
 	// Initialize each shard with count=0
@@ -92,7 +102,7 @@ func (c *distributedCounter) CreateShards(ctx context.Context, docRef *firestore
 
 // UpdateCounters updates a randomly picked shard of a Document.
 //If no ShardField specified, an NoShardFieldSpecified will be returned
-func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firestore.DocumentRef) (*firestore.WriteResult, error) {
+func (c *distributedCounterInstance) UpdateCounters(ctx context.Context, docRef *firestore.DocumentRef) (*firestore.WriteResult, error) {
 	updateCount := len(c.shardFields)
 	if updateCount == 0 {
 		return nil, NoShardFieldSpecified
