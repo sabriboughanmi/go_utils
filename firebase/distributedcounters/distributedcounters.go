@@ -133,18 +133,10 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 			return nil, fmt.Errorf("error mapping default shard structure for creation!: %v", err)
 		}
 
-		//add Missing Default Fields
-		for key, value := range defaultStructure {
-		GoToNextField:
-			for i := 0; i < len(updatedFields); i++ {
-				if ShardField(updatedFields[i].Path) == key {
-					continue GoToNextField
-				}
-			}
-			updatedFields = append(updatedFields, firestore.Update{
-				Path:  string(key),
-				Value: value,
-			})
+		//Update Fields in defaultStructure
+		for i:=0; i<len(updatedFields); i++{
+			updatedField := updatedFields[i]
+			defaultStructure[ShardField(updatedField.Path)] = updatedField.Value
 		}
 
 		return shardRef.Set(ctx, updatedFields)
