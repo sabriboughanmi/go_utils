@@ -118,7 +118,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 		Value: docRef.ID,
 	}
 
-	//Add DocumentID for roll-up Updates
+	//Add LastUpdate for roll-up Updates
 	updatedFields[index+1] = firestore.Update{
 		Path:  string(lastRollUpUpdate),
 		Value: time.Now(),
@@ -131,6 +131,11 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 		defaultStructure := make(map[string]interface{})
 		if err = utils.InterfaceAs(c.defaultShardStructure, &defaultStructure); err != nil {
 			return nil, fmt.Errorf("error mapping default shard structure for creation!: %v", err)
+		}
+
+		//Check Usage of Internal Keys
+		for key,_ := range  defaultStructure{
+			checkInternalFieldsUsage(ShardField(key))
 		}
 
 		//Update Fields in defaultStructure
