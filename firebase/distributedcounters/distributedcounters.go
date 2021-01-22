@@ -139,7 +139,7 @@ func (c *distributedCounter) UpdateCounters(ctx context.Context, docRef *firesto
 			defaultStructure[ShardField(updatedField.Path)] = updatedField.Value
 		}
 
-		return shardRef.Set(ctx, updatedFields)
+		return shardRef.Set(ctx, defaultStructure)
 	}
 
 	return wr, err
