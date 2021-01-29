@@ -265,7 +265,7 @@ func (c *distributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 	}
 
 	//Add LastUpdate for roll-up Updates
-	updatedFields[index+1] = firestore.Update{
+	updatedFields[updateCount] = firestore.Update{
 		Path:  string(creationTime),
 		Value: time.Now(),
 	}
