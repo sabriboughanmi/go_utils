@@ -174,7 +174,7 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 			}
 
 			//Shard Parent Changed
-			//TODO: Process Shards
+			//Process Shards
 		   	err = rollUpShards(client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
 			if err!=nil{
 				log.Fatal(err)
