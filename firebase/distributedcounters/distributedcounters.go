@@ -79,7 +79,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	batch := client.Batch()
 
 	//Collect Data from Shards
-	incrementalFields := make(map[string]int64)
+	incrementalFields := make(map[string]interface{})
 	for i := 0; i < len(shards); i++ {
 		//Cache the doc for performance reasons
 		doc := shards[i]
@@ -92,7 +92,16 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 			if isInternalFields(ShardField(key)) {
 				continue
 			}
-			incrementalFields[key] += value.(int64)
+			switch value.(type) {
+			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+				incrementalFields[key] = incrementalFields[key].(int64) + value.(int64)
+				break
+			case float32, float64:
+				incrementalFields[key] = incrementalFields[key].(float64) + value.(float64)
+				break
+			default:
+				continue
+			}
 		}
 	}
 
@@ -157,10 +166,10 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 		//Process Shards Queue
 		for i := 0; i < len(shardsInQueue); i++ {
 			//Last Shard in Queue
-			if i+1 == len(shardsInQueue)  {
-				if moreShardsExists{
+			if i+1 == len(shardsInQueue) {
+				if moreShardsExists {
 					//Remove Processed Shards from shardsInQueue
-					shardsInQueue = shardsInQueue[firstElementToProcess:i+1]
+					shardsInQueue = shardsInQueue[firstElementToProcess : i+1]
 					break
 				}
 
@@ -169,17 +178,17 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 			}
 
 			//Skip if Parent Still Same
-			if shardsInQueue[i] == shardsInQueue[i+1]{
+			if shardsInQueue[i] == shardsInQueue[i+1] {
 				continue
 			}
 
 			//Shard Parent Changed
 			//Process Shards
-		   	err = rollUpShards(client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
-			if err!=nil{
+			err = rollUpShards(client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
+			if err != nil {
 				log.Fatal(err)
 			}
-			firstElementToProcess = i+1
+			firstElementToProcess = i + 1
 
 		}
 	}
@@ -197,21 +206,26 @@ func (dc *DistributedCounters) CreateDistributedCounter() distributedCounterInst
 	}
 }
 
-//AddFieldForUpdate Adds a Shard.Field for updated
-func (c *distributedCounterInstance) AddFieldForUpdate(field ShardField, value interface{}) {
+/* Non support for non incremental Fields
+//CreateField Adds a Shard.Field for updated
+func (c *distributedCounterInstance) CreateField(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
 	c.shardFields[field] = value
-}
+}*/
 
 //Increments a Shard.Field for updated.
-//Note! The Shard
-//The supported values are:
+//Note! The Shard supported values are:
 //   int, int8, int16, int32, int64
 //   uint8, uint16, uint32
 //   float32, float64
 func (c *distributedCounterInstance) IncrementField(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
-	c.shardFields[field] = firestore.Increment(value)
+	switch value.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		c.shardFields[field] = firestore.Increment(value)
+	default:
+		panic("IncrementField supported values are: int, int8, int16, int32, int64, uint8, uint16, uint32, float32, float64")
+	}
 }
 
 // CreateShards creates a given number of shards as sub-collection of the specified document.
