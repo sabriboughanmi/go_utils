@@ -77,8 +77,6 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 		return fmt.Errorf("no documents to process")
 	}
 
-	fmt.Printf("Shard found:%d with ID: %s  \n", len(shards),shards[0].Ref.ID )
-
 	batch := client.Batch()
 
 	//Collect Data from Shards
@@ -88,8 +86,6 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 		//Cache the doc for performance reasons
 		doc := shards[i]
 
-		//Add to delete batch
-		batch.Delete(doc.Ref)
 
 		//Collect Data
 		dataMap := doc.Data()
@@ -99,6 +95,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 			if isInternalFields(ShardField(key)) {
 				continue
 			}
+
 			switch value.(type) {
 			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 				if incrementalFields[key] == nil {
@@ -107,6 +104,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 				}
 				incrementalFields[key] = incrementalFields[key].(int64) + value.(int64)
 				break
+
 			case float32, float64:
 				if incrementalFields[key] == nil {
 					incrementalFields[key] = value.(float64)
@@ -114,11 +112,15 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 				}
 				incrementalFields[key] = incrementalFields[key].(float64) + value.(float64)
 				break
+
 			default:
 				//Ignore Key
 				continue
 			}
 		}
+
+		//Add to delete batch
+		batch.Delete(doc.Ref)
 	}
 
 	valuesToUpdate := make([]firestore.Update, 0)
@@ -173,8 +175,6 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("Shards found! %d",len(newShards))
 
 		//Prepare Exit/Cursor
 		if len(newShards) < dc.ShardCount {
@@ -299,6 +299,7 @@ func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 	//Create New Shard if not existing (add missing Default Fields)
 	if status.Code(err) == codes.NotFound {
 		defaultStructure := make(map[string]interface{})
+
 		if err = utils.InterfaceAs(c.defaultShardStructure, &defaultStructure); err != nil {
 			return nil, fmt.Errorf("error mapping default shard structure for creation!: %v", err)
 		}
