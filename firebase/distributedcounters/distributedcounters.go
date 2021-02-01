@@ -19,16 +19,16 @@ type DistributedCounters struct {
 	ShardCount            int
 	ShardName             string
 	ShardDefaultStructure interface{}
-	RollUpTime            int64 //RollUp Will be Executed Every X minutes
+	RollUpTime            int64 //how many seconds before the next rollup
 }
 
 const (
 	documentID   ShardField = "did" //This field is used to Track/Order Shards by their Parent Document for roll-up Process
-	creationTime ShardField = "ct"  // This Field is used to Track which shard has exceeded to rollup time
+	creationTick ShardField = "ct"  // This Field is used to Track which shard has exceeded to rollup time
 )
 
 var (
-	internalKeys = []ShardField{documentID, creationTime}
+	internalKeys = []ShardField{documentID, creationTick}
 )
 
 //Return if a string is an internal field
@@ -59,14 +59,15 @@ type ShardField string
 
 type DistributedShard map[ShardField]interface{}
 
-// distributedCounterInstance is a collection of documents (shards)
-// to realize counter with high frequency.
+//distributedCounterInstance is a collection of documents (shards)
+//to realize counter with high frequency.
 //This Struct will be created by every Incremental Section (Videos Likes, Comments Likes ..)
 type distributedCounterInstance struct {
 	shardName             string
 	numShards             int
 	shardFields           DistributedShard
 	defaultShardStructure interface{}
+	rollUpTime            int64
 }
 
 //RollUp Shards of a specific Document,
@@ -135,14 +136,20 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 //RollUP all documents Shards relative to the DistributedCounters.ShardName
 func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context) error {
 
-	createdAt := time.Unix(time.Now().Unix()-(60*dc.RollUpTime), 0)
+	currentTick := time.Now().Unix() / dc.RollUpTime
+	ticks := make([]int64, 10)
+	var i int64
+	for i = 0; i < 10; i++ {
+		ticks[i] = currentTick - i
+	}
+
 	//Loop Managers
 	var cursor *firestore.DocumentSnapshot = nil
 	var shardsInQueue []*firestore.DocumentSnapshot
 	var moreShardsExists = true
 
 	for moreShardsExists {
-		query := client.CollectionGroup(dc.ShardName).Where(string(creationTime), "<=", createdAt).OrderBy(string(documentID), firestore.Asc).Limit(dc.ShardCount)
+		query := client.CollectionGroup(dc.ShardName).OrderBy(string(documentID), firestore.Asc).Where(string(creationTick), "in", ticks).Limit(dc.ShardCount)
 		if cursor != nil {
 			query.StartAfter(cursor)
 		}
@@ -203,6 +210,7 @@ func (dc *DistributedCounters) CreateDistributedCounter() distributedCounterInst
 		numShards:             dc.ShardCount,
 		shardFields:           make(map[ShardField]interface{}),
 		defaultShardStructure: dc.ShardDefaultStructure,
+		rollUpTime:            dc.RollUpTime,
 	}
 }
 
@@ -266,8 +274,8 @@ func (c *distributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 
 	//Add LastUpdate for roll-up Updates
 	updatedFields[updateCount] = firestore.Update{
-		Path:  string(creationTime),
-		Value: time.Now(),
+		Path:  string(creationTick),
+		Value: (time.Now().Unix() / c.rollUpTime) + 1,
 	}
 
 	wr, err := shardRef.Update(ctx, updatedFields)
