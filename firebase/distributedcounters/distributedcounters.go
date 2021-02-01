@@ -126,7 +126,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 		batch.Delete(doc.Ref)
 	}
 
-	fmt.Printf("Batched Shards: %s.",string(utils.UnsafeAnythingToJSON(ids)) )
+	fmt.Printf("Batched Shards: %s \n",string(utils.UnsafeAnythingToJSON(ids)) )
 
 	valuesToUpdate := make([]firestore.Update, 0)
 	for key, value := range incrementalFields {
