@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -94,8 +95,10 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 			if isInternalFields(ShardField(key)) {
 				continue
 			}
-			if value == nil{
+
+			if value == nil || reflect.TypeOf(value)  == nil{
 				fmt.Printf("Value is Nil: %s",key)
+				continue
 			}
 			switch value.(type) {
 			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
