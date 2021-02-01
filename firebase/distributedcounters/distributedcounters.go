@@ -88,6 +88,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 		batch.Delete(doc.Ref)
 		//Collect Data
 		dataMap := doc.Data()
+		fmt.Println(string(utils.UnsafeAnythingToJSON(dataMap)))
 		for key, value := range dataMap {
 			//Skip internal Keys
 			if isInternalFields(ShardField(key)) {
@@ -101,6 +102,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 				incrementalFields[key] = incrementalFields[key].(float64) + value.(float64)
 				break
 			default:
+				//Ignore Key
 				continue
 			}
 		}
