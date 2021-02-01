@@ -77,6 +77,8 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 		return fmt.Errorf("no documents to process")
 	}
 
+	fmt.Printf("Shard found:%d with ID: %s  \n", len(shards),shards[0].Ref.ID )
+
 	batch := client.Batch()
 
 	//Collect Data from Shards
