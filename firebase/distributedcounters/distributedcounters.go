@@ -94,6 +94,9 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 			if isInternalFields(ShardField(key)) {
 				continue
 			}
+			if value == nil{
+				fmt.Printf("Value is Nil: %s",key)
+			}
 			switch value.(type) {
 			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 				incrementalFields[key] = incrementalFields[key].(int64) + value.(int64)
