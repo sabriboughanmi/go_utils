@@ -59,10 +59,10 @@ type ShardField string
 
 type DistributedShard map[ShardField]interface{}
 
-//distributedCounterInstance is a collection of documents (shards)
+//DistributedCounterInstance is a collection of documents (shards)
 //to realize counter with high frequency.
 //This Struct will be created by every Incremental Section (Videos Likes, Comments Likes ..)
-type distributedCounterInstance struct {
+type DistributedCounterInstance struct {
 	shardName             string
 	numShards             int
 	shardFields           DistributedShard
@@ -196,7 +196,6 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 				log.Fatal(err)
 			}
 			firstElementToProcess = i + 1
-
 		}
 	}
 
@@ -204,8 +203,8 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 }
 
 //CreateDistributedCounter returns a CreateDistributedCounter to manage Shards
-func (dc *DistributedCounters) CreateDistributedCounter() distributedCounterInstance {
-	return distributedCounterInstance{
+func (dc *DistributedCounters) CreateDistributedCounter() DistributedCounterInstance {
+	return DistributedCounterInstance{
 		shardName:             dc.ShardName,
 		numShards:             dc.ShardCount,
 		shardFields:           make(map[ShardField]interface{}),
@@ -216,7 +215,7 @@ func (dc *DistributedCounters) CreateDistributedCounter() distributedCounterInst
 
 /* Non support for non incremental Fields
 //CreateField Adds a Shard.Field for updated
-func (c *distributedCounterInstance) CreateField(field ShardField, value interface{}) {
+func (c *DistributedCounterInstance) CreateField(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
 	c.shardFields[field] = value
 }*/
@@ -226,7 +225,7 @@ func (c *distributedCounterInstance) CreateField(field ShardField, value interfa
 //   int, int8, int16, int32, int64
 //   uint8, uint16, uint32
 //   float32, float64
-func (c *distributedCounterInstance) IncrementField(field ShardField, value interface{}) {
+func (c *DistributedCounterInstance) IncrementField(field ShardField, value interface{}) {
 	checkInternalFieldsUsage(field)
 	switch value.(type) {
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
@@ -238,7 +237,7 @@ func (c *distributedCounterInstance) IncrementField(field ShardField, value inte
 
 // CreateShards creates a given number of shards as sub-collection of the specified document.
 //(This operation need to be done once per Document or it will reinitialize all shards Data )
-func (c *distributedCounterInstance) CreateShards(ctx context.Context, docRef *firestore.DocumentRef, shardData interface{}) error {
+func (c *DistributedCounterInstance) CreateShards(ctx context.Context, docRef *firestore.DocumentRef, shardData interface{}) error {
 	colRef := docRef.Collection(c.shardName)
 
 	// Initialize each shard with count=0
@@ -252,7 +251,7 @@ func (c *distributedCounterInstance) CreateShards(ctx context.Context, docRef *f
 
 // UpdateCounters updates a randomly picked shard of a Document.
 //If no ShardField specified, an NoShardFieldSpecified will be returned
-func (c *distributedCounterInstance) UpdateCounters(ctx context.Context, docRef *firestore.DocumentRef) (*firestore.WriteResult, error) {
+func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef *firestore.DocumentRef) (*firestore.WriteResult, error) {
 	updateCount := len(c.shardFields)
 	if updateCount == 0 {
 		return nil, NoShardFieldSpecified
