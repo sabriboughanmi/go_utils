@@ -96,15 +96,13 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 				continue
 			}
 
-			if value == nil || reflect.TypeOf(value)  == nil{
-				fmt.Printf("Value is Nil: %s",key)
-				continue
-			}
 			switch value.(type) {
 			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+				fmt.Printf("Key: %s, Value: %v, Type:%v \n", key,value, reflect.TypeOf(value))
 				incrementalFields[key] = incrementalFields[key].(int64) + value.(int64)
 				break
 			case float32, float64:
+				fmt.Printf("Key: %s, Value: %v, Type:%v \n", key,value, reflect.TypeOf(value))
 				incrementalFields[key] = incrementalFields[key].(float64) + value.(float64)
 				break
 			default:
