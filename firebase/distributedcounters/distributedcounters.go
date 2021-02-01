@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 	"log"
 	"math/rand"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -83,26 +82,34 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	//Collect Data from Shards
 	incrementalFields := make(map[string]interface{})
 	for i := 0; i < len(shards); i++ {
+
 		//Cache the doc for performance reasons
 		doc := shards[i]
+
 		//Add to delete batch
 		batch.Delete(doc.Ref)
+
 		//Collect Data
 		dataMap := doc.Data()
-		fmt.Println(string(utils.UnsafeAnythingToJSON(dataMap)))
+
 		for key, value := range dataMap {
 			//Skip internal Keys
 			if isInternalFields(ShardField(key)) {
 				continue
 			}
-
 			switch value.(type) {
 			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-				fmt.Printf("Key: %s, Value: %v, Type:%v \n", key,value, reflect.TypeOf(value))
+				if incrementalFields[key] == nil {
+					incrementalFields[key] = value.(int64)
+					continue
+				}
 				incrementalFields[key] = incrementalFields[key].(int64) + value.(int64)
 				break
 			case float32, float64:
-				fmt.Printf("Key: %s, Value: %v, Type:%v \n", key,value, reflect.TypeOf(value))
+				if incrementalFields[key] == nil {
+					incrementalFields[key] = value.(float64)
+					continue
+				}
 				incrementalFields[key] = incrementalFields[key].(float64) + value.(float64)
 				break
 			default:
