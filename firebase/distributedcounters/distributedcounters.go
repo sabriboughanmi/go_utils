@@ -174,6 +174,8 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 			return err
 		}
 
+		fmt.Printf("Shards found! %d",len(newShards))
+
 		//Prepare Exit/Cursor
 		if len(newShards) < dc.ShardCount {
 			moreShardsExists = false
