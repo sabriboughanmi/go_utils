@@ -79,8 +79,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 
 	batch := client.Batch()
 
-	 ids := make([]string,len(shards) )
-
+	ids := make([]string, len(shards))
 
 	//Collect Data from Shards
 	incrementalFields := make(map[string]interface{})
@@ -92,6 +91,9 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 
 		//Collect Data
 		dataMap := doc.Data()
+
+		//Add to delete batch
+		batch.Delete(doc.Ref)
 
 		for key, value := range dataMap {
 			//Skip internal Keys
@@ -121,12 +123,8 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 				continue
 			}
 		}
-
-		//Add to delete batch
-		batch.Delete(doc.Ref)
 	}
-
-	fmt.Printf("Batched Shards: %s \n",string(utils.UnsafeAnythingToJSON(ids)) )
+	fmt.Printf("Batched Shards : %v \n", ids)
 
 	valuesToUpdate := make([]firestore.Update, 0)
 	for key, value := range incrementalFields {
