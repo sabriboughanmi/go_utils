@@ -79,7 +79,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 
 	batch := client.Batch()
 
-	ids := make([]string, len(shards))
+	var ids []string
 
 	//Collect Data from Shards
 	incrementalFields := make(map[string]interface{})
@@ -87,7 +87,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 
 		//Cache the doc for performance reasons
 		doc := shards[i]
-		ids[i] = doc.Ref.Parent.Parent.ID
+		ids = append(ids, doc.Ref.Parent.Parent.ID)
 
 		//Collect Data
 		dataMap := doc.Data()
@@ -124,7 +124,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 			}
 		}
 	}
-	fmt.Printf("Batched Shards : %v \n", ids)
+	fmt.Printf("Batched Shards Count(%d): %v \n", len(ids), ids)
 
 	valuesToUpdate := make([]firestore.Update, 0)
 	for key, value := range incrementalFields {
