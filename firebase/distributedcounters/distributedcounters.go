@@ -299,8 +299,8 @@ func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 	//Create New Shard if not existing (add missing Default Fields)
 	if status.Code(err) == codes.NotFound {
 
-		//Add LastUpdate for roll-up Updates
-		c.shardFields.CreationTick = (time.Now().Unix() / c.rollUpTime) + 1
+		//Add Next Tick for roll-up.
+		c.shardFields.CreationTick = (time.Now().Unix() / (c.rollUpTime/2)) + 2
 
 		//Add DocumentID for roll-up Updates
 		c.shardFields.DocumentID = docRef.ID
