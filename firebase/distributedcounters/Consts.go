@@ -2,7 +2,6 @@ package distributedcounters
 
 import "errors"
 
-
 var (
 	//Errors
 	NoShardFieldSpecified = errors.New("no Shard Fields Specified")
@@ -27,3 +26,4 @@ var (
 		CursorID:     string(cursorID),
 	}
 )
+

@@ -14,6 +14,102 @@ import (
 
 //RollUp Shards of a specific Document,
 //Warning! If an array of DocumentSnapshots is passed with multiple parents the first parent will get updated by all Shards
+func parallelRollUpShards(errorChan chan error, client *firestore.Client, ctx context.Context, shards ...*firestore.DocumentSnapshot) {
+
+	if shards == nil || len(shards) == 0 {
+		fmt.Printf("Error Query: %v \n",fmt.Errorf("no documents to process"))
+		errorChan <- fmt.Errorf("no documents to process")
+		return
+	}
+
+	batch := client.Batch()
+	/*//DEBUG:
+	var ids []string
+	*/
+	//Collect Data from Shards
+	incrementalIntFields := make(map[string]int64)
+	incrementalFloatFields := make(map[string]float64)
+	for i := 0; i < len(shards); i++ {
+
+		//Cache the doc for performance reasons
+		doc := shards[i]
+		/*//DEBUG:
+		ids = append(ids, fmt.Sprintf("Doc: %s, Parent:%s ", doc.Ref.ID, doc.Ref.Parent.Parent.ID))
+		*/
+		var shardStructure shardStructure
+		//Collect Data
+		if err := doc.DataTo(&shardStructure); err != nil {
+			errorChan <- err
+			return
+		}
+
+		//Add to delete batch
+		batch.Delete(doc.Ref)
+
+		//Sum Ints
+		for key, value := range shardStructure.Ints {
+			//Skip internal Keys
+			if isInternalFields(ShardField(key)) {
+				continue
+			}
+			incrementalIntFields[key] += value
+		}
+		//Sum floats
+		for key, value := range shardStructure.Floats {
+			//Skip internal Keys
+			if isInternalFields(ShardField(key)) {
+				continue
+			}
+			incrementalFloatFields[key] += value
+		}
+	}
+
+	/*//DEBUG:
+	fmt.Printf("Batched Shards Count(%d): %v \n", len(ids), ids)
+	*/
+	var valuesToUpdate []firestore.Update
+
+	//Collect incremental Ints
+	for key, value := range incrementalIntFields {
+		valuesToUpdate = append(valuesToUpdate, firestore.Update{
+			Path:  key,
+			Value: firestore.Increment(value),
+		})
+	}
+
+	//Collect incremental Floats
+	for key, value := range incrementalFloatFields {
+		valuesToUpdate = append(valuesToUpdate, firestore.Update{
+			Path:  key,
+			Value: firestore.Increment(value),
+		})
+	}
+
+	//Skip Update if Values are
+	if len(valuesToUpdate) == 0 {
+		errorChan <- nil
+		return
+	}
+
+	//Update Fields in Parent document
+	_, err := shards[0].Ref.Parent.Parent.Update(ctx, valuesToUpdate)
+	if err != nil {
+		fmt.Printf("Error Updating Parent: %v \n",err)
+		errorChan <- err
+		return
+	}
+
+	//Delete Shards
+	_, err = batch.Commit(ctx)
+	if err!=nil {
+		fmt.Printf("Error batch.Commit: %v \n",err)
+	}
+	errorChan <- err
+	return
+}
+
+//RollUp Shards of a specific Document,
+//Warning! If an array of DocumentSnapshots is passed with multiple parents the first parent will get updated by all Shards
 func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*firestore.DocumentSnapshot) error {
 	if shards == nil || len(shards) == 0 {
 		return fmt.Errorf("no documents to process")
@@ -95,6 +191,137 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	//Delete Shards
 	_, err = batch.Commit(ctx)
 	return err
+}
+
+type RollUpAsyncResponse struct {
+	responseChan []chan error
+	response     []error
+}
+
+func (rar *RollUpAsyncResponse) addChan(channel chan error) {
+	rar.responseChan = append(rar.responseChan, channel)
+}
+
+func (rar *RollUpAsyncResponse) Await() {
+	rar.response = make([]error, len(rar.responseChan))
+	for i := 0; i < len(rar.responseChan); i++ {
+		rar.response[i] =  <-rar.responseChan[i]
+	}
+}
+
+func (rar *RollUpAsyncResponse) HasErrors() []error {
+	var errorsArray []error
+	for i := 0; i < len(rar.response); i++ {
+		if rar.response[i] != nil {
+			errorsArray = append(errorsArray, rar.response[i])
+		}
+	}
+	if len(errorsArray) == 0 {
+		return nil
+	}
+
+	return errorsArray
+}
+
+//RollUP all documents Shards relative to the DistributedCounters.ShardName
+//This function Executes multiple RollUps in parallel. (parallelDocumentsCount will be multiplied by the ShardCount and used as Query Limiter)
+func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int) (*RollUpAsyncResponse, error) {
+
+	queryLimiter := dc.ShardCount * parallelDocumentsCount
+	currentTick := time.Now().Unix() / dc.RollUpTime
+	ticks := make([]int64, 10)
+	var i int64
+	for i = 0; i < 10; i++ {
+		ticks[i] = currentTick - i
+	}
+
+	var rollUpAsyncResponse RollUpAsyncResponse
+
+	//Loop Managers
+	var cursor *firestore.DocumentSnapshot = nil
+	var shardsInQueue []*firestore.DocumentSnapshot
+	var moreShardsExists = true
+
+	for moreShardsExists {
+		var query firestore.Query
+		if cursor != nil {
+			query = client.CollectionGroup(dc.ShardName).
+				OrderBy(string(cursorID), firestore.Asc).
+				Where(string(creationTick), "in", ticks).
+				StartAfter(cursor.Data()[string(cursorID)]).
+				Limit(queryLimiter)
+		} else {
+			query = client.CollectionGroup(dc.ShardName).
+				OrderBy(string(cursorID), firestore.Asc).
+				Where(string(creationTick), "in", ticks).
+				Limit(queryLimiter)
+		}
+		it := query.Documents(ctx)
+		newShards, err := it.GetAll()
+		if err != nil {
+			return &rollUpAsyncResponse, err
+		}
+
+		/*//DEBUG:
+		// Get the last document.
+		var queueIds []string
+		for m := 0; m < len(newShards); m++ {
+			queueIds = append(queueIds, fmt.Sprintf("[Doc: %s, Parent:%s], ", newShards[m].Ref.ID, newShards[m].Ref.Parent.Parent.ID))
+		}
+		fmt.Printf("NewShards Count : (%d),  %v \n", len(newShards), queueIds)
+		//Debug
+		*/
+
+		//Prepare Exit/Cursor
+		if len(newShards) < dc.ShardCount {
+			moreShardsExists = false
+		} else {
+			cursor = newShards[len(newShards)-1]
+		}
+
+		//Append new Shards
+		shardsInQueue = append(shardsInQueue, newShards...)
+
+		firstElementToProcess := 0
+		//Process Shards Queue
+		for i := 0; i < len(shardsInQueue); i++ {
+			//Last Shard in Queue
+			if i+1 == len(shardsInQueue) {
+				if moreShardsExists {
+					//Remove Processed Shards from shardsInQueue
+					shardsInQueue = shardsInQueue[firstElementToProcess : i+1]
+					/*//DEBUG:
+					var queueIds []string
+					for m := 0; m < len(shardsInQueue); m++ {
+						queueIds = append(queueIds, fmt.Sprintf("Doc: %s, Parent:%s", shardsInQueue[m].Ref.ID, shardsInQueue[m].Ref.Parent.Parent.ID))
+					}
+					fmt.Printf("Kept for later : %v \n", queueIds)
+					*/
+					break
+				}
+
+				//Process Remaining Shards and quit
+				newChan := make(chan error)
+				go parallelRollUpShards(newChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
+				rollUpAsyncResponse.addChan(newChan)
+				return &rollUpAsyncResponse,nil
+			}
+
+			//Skip if Parent Still Same
+			if shardsInQueue[i].Ref.Parent.Parent.ID == shardsInQueue[i+1].Ref.Parent.Parent.ID {
+				continue
+			}
+
+			//Shard Parent Changed
+			//Process Shards
+			newChan := make(chan error)
+			go parallelRollUpShards(newChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
+			rollUpAsyncResponse.addChan(newChan)
+			firstElementToProcess = i + 1
+		}
+	}
+
+	return &rollUpAsyncResponse, nil
 }
 
 //RollUP all documents Shards relative to the DistributedCounters.ShardName
@@ -300,7 +527,7 @@ func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 	if status.Code(err) == codes.NotFound {
 
 		//Add Next Tick for roll-up.
-		c.shardFields.CreationTick = (time.Now().Unix() / (c.rollUpTime/2)) + 2
+		c.shardFields.CreationTick = (time.Now().Unix() / c.rollUpTime) + 2
 
 		//Add DocumentID for roll-up Updates
 		c.shardFields.DocumentID = docRef.ID
