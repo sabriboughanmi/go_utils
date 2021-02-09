@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"io"
 	"os"
 	"os/exec"
@@ -197,6 +198,50 @@ func LoadVideo(path string) (*Video, error) {
 		end:      duration,
 		duration: duration,
 	}, nil
+}
+
+// LoadVideoFromFragments returns a Video that can be operated on. Load does not open the file or load it into memory.
+//Note! path and Fragments need to be already Existing
+func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error) {
+
+	importList := `# this is a comment`
+	for _, p := range fragmentsPath {
+		importList += fmt.Sprintf("\nfile '%s'", p)
+	}
+
+	listPath, err := osUtils.CreateTempFile("list.txt", []byte(importList))
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(listPath)
+
+	//fmt.Printf("listPath: %s\n",listPath)
+
+	cmdline := []string{
+		"ffmpeg",
+		"-y",
+		"-f",
+		"concat",
+		"-safe",
+		"0",
+		"-i",
+		listPath,
+		"-c",
+		"copy",
+		path,
+	}
+
+	cmd := exec.Command(cmdline[0], cmdline[1:]...)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	if err = cmd.Run(); err != nil {
+		return nil, fmt.Errorf(stderr.String())
+	}
+
+	return LoadVideo(path)
 }
 
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
