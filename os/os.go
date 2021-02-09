@@ -13,6 +13,19 @@ func CreateTempDirectory(directory string) error {
 	return os.Mkdir(directory, os.ModePerm)
 }
 
+//RemovePathsIfExists.
+func RemovePathsIfExists(paths ...string) {
+	for _, path := range paths {
+		if _, err := os.Stat(path); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+		}
+		os.Remove(path)
+	}
+	return
+}
+
 //RemovePathIfExists .
 func RemovePathIfExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
