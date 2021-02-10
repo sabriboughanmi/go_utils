@@ -112,9 +112,9 @@ func LoadFileAtPath(bucket, storagePath, dstPath string, client *storage.Client,
 }
 
 // MoveFile moves an object into another location.
-func MoveFile(bucket, srcName, dstName string, client *storage.Client, ctx context.Context) error {
-	src := client.Bucket(bucket).Object(srcName)
-	dst := client.Bucket(bucket).Object(dstName)
+func MoveFile(srcBucket, dstBucket, srcName, dstName string, client *storage.Client, ctx context.Context) error {
+	src := client.Bucket(srcBucket).Object(srcName)
+	dst := client.Bucket(dstBucket).Object(dstName)
 
 	if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
 		return fmt.Errorf("Object(%q).CopierFrom(%q).Run: %v", dstName, srcName, err)
