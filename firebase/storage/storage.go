@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"cloud.google.com/go/storage"
 )
@@ -122,6 +123,42 @@ func MoveFile(srcBucket, dstBucket, srcName, dstName string, client *storage.Cli
 	if err := src.Delete(ctx); err != nil {
 		return fmt.Errorf("Object(%q).Delete: %v", srcName, err)
 	}
+	return nil
+}
+
+// RemoveFile Removes a file from Storage
+func RemoveFile(bucket, name string, client *storage.Client, ctx context.Context) error {
+	src := client.Bucket(bucket).Object(name)
+	if err := src.Delete(ctx); err != nil {
+		return fmt.Errorf("Object(%s).Delete: %v", name, err)
+	}
+	return nil
+}
+
+// RemoveFile Removes a file from Storage
+func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket string, names ...string) error {
+	bucketHandle := client.Bucket(bucket)
+
+	wg := sync.WaitGroup{}
+	errChan := make(chan error)
+
+	for _, storagePath := range names {
+		wg.Add(1)
+		func(errorChan chan error, waitGroup *sync.WaitGroup) {
+			defer waitGroup.Done()
+			objHandle := bucketHandle.Object(storagePath)
+			if err := objHandle.Delete(ctx); err != nil {
+				errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
+				return
+			}
+		}(errChan, &wg)
+	}
+
+	//Wait Removing Errors
+	if err := HandleGoroutineErrors(&wg,errChan ); err!=nil{
+		return err
+	}
+
 	return nil
 }
 
