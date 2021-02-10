@@ -155,7 +155,7 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 	}
 
 	//Wait Removing Errors
-	if err := HandleGoroutineErrors(&wg,errChan ); err!=nil{
+	if err := HandleGoroutineErrors(&wg, errChan); err != nil {
 		return err
 	}
 
@@ -176,6 +176,28 @@ func CreateFile(bucket, fileName string, content []byte, contentType FileContent
 
 	if _, err := wc.Write(content); err != nil {
 		return fmt.Errorf("createFile: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
+	}
+	return nil
+}
+
+// CreateStorageFileFromLocal creates a file in Google Cloud Storage from a Local file Path.
+func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
+	data, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		return err
+	}
+
+	wc := client.Bucket(bucket).Object(fileName).NewWriter(ctx)
+	defer wc.Close()
+
+	if fileMetaData != nil {
+		wc.Metadata = fileMetaData
+	} else {
+		wc.Metadata = make(map[string]string)
+	}
+
+	if _, err := wc.Write(data); err != nil {
+		return fmt.Errorf("CreateStorageFileFromLocal: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
 	}
 	return nil
 }
