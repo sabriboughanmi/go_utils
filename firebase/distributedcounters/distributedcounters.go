@@ -4,20 +4,23 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
+	"github.com/sabriboughanmi/go_utils/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 )
 
 //RollUp Shards of a specific Document,
 //Warning! If an array of DocumentSnapshots is passed with multiple parents the first parent will get updated by all Shards
-func parallelRollUpShards(errorChan chan error, client *firestore.Client, ctx context.Context, shards ...*firestore.DocumentSnapshot) {
+func parallelRollUpShards(waitGroup *sync.WaitGroup, errorChan chan error, client *firestore.Client, ctx context.Context, shards ...*firestore.DocumentSnapshot) {
+	defer waitGroup.Done()
 
 	if shards == nil || len(shards) == 0 {
-		fmt.Printf("Error Query: %v \n",fmt.Errorf("no documents to process"))
+		fmt.Printf("Error Query: %v \n", fmt.Errorf("no documents to process"))
 		errorChan <- fmt.Errorf("no documents to process")
 		return
 	}
@@ -85,26 +88,25 @@ func parallelRollUpShards(errorChan chan error, client *firestore.Client, ctx co
 		})
 	}
 
-	//Skip Update if Values are
+	//Skip Update if Values there are no Changes
 	if len(valuesToUpdate) == 0 {
-		errorChan <- nil
 		return
 	}
 
 	//Update Fields in Parent document
-	_, err := shards[0].Ref.Parent.Parent.Update(ctx, valuesToUpdate)
-	if err != nil {
-		fmt.Printf("Error Updating Parent: %v \n",err)
+
+	if _, err := shards[0].Ref.Parent.Parent.Update(ctx, valuesToUpdate); err != nil {
+		fmt.Printf("Error Updating Parent: %v \n", err)
 		errorChan <- err
 		return
 	}
 
 	//Delete Shards
-	_, err = batch.Commit(ctx)
-	if err!=nil {
-		fmt.Printf("Error batch.Commit: %v \n",err)
+	if _, err := batch.Commit(ctx);err != nil {
+		fmt.Printf("Error batch.Commit: %v \n", err)
+		errorChan <- err
 	}
-	errorChan <- err
+
 	return
 }
 
@@ -193,6 +195,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	return err
 }
 
+/*
 type RollUpAsyncResponse struct {
 	responseChan []chan error
 	response     []error
@@ -222,10 +225,16 @@ func (rar *RollUpAsyncResponse) HasErrors() []error {
 
 	return errorsArray
 }
+*/
 
 //RollUP all documents Shards relative to the DistributedCounters.ShardName
 //This function Executes multiple RollUps in parallel. (parallelDocumentsCount will be multiplied by the ShardCount and used as Query Limiter)
-func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int) (*RollUpAsyncResponse, error) {
+func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int) error {
+	wg := sync.WaitGroup{}
+
+	//Wait for the execution of RollUps to finish even if some RollUps have failed.
+	//Note! firestore Document operations only occur if the RollUp is successful.
+	defer wg.Wait()
 
 	queryLimiter := dc.ShardCount * parallelDocumentsCount
 	currentTick := time.Now().Unix() / dc.RollUpTime
@@ -235,12 +244,12 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 		ticks[i] = currentTick - i
 	}
 
-	var rollUpAsyncResponse RollUpAsyncResponse
-
 	//Loop Managers
 	var cursor *firestore.DocumentSnapshot = nil
 	var shardsInQueue []*firestore.DocumentSnapshot
 	var moreShardsExists = true
+	errorChan := make(chan error)
+
 
 	for moreShardsExists {
 		var query firestore.Query
@@ -259,7 +268,8 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 		it := query.Documents(ctx)
 		newShards, err := it.GetAll()
 		if err != nil {
-			return &rollUpAsyncResponse, err
+			errorChan <- err
+			return utils.HandleGoroutineErrors(&wg, errorChan)
 		}
 
 		/*//DEBUG:
@@ -301,10 +311,9 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 				}
 
 				//Process Remaining Shards and quit
-				newChan := make(chan error)
-				go parallelRollUpShards(newChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
-				rollUpAsyncResponse.addChan(newChan)
-				return &rollUpAsyncResponse,nil
+				wg.Add(1)
+				go parallelRollUpShards(&wg, errorChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
+				return utils.HandleGoroutineErrors(&wg, errorChan)
 			}
 
 			//Skip if Parent Still Same
@@ -313,15 +322,15 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 			}
 
 			//Shard Parent Changed
-			//Process Shards
-			newChan := make(chan error)
-			go parallelRollUpShards(newChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
-			rollUpAsyncResponse.addChan(newChan)
+			//Process Shardsv
+
+			wg.Add(1)
+			go parallelRollUpShards(&wg, errorChan, client, ctx, shardsInQueue[firstElementToProcess:i+1]...)
 			firstElementToProcess = i + 1
 		}
 	}
 
-	return &rollUpAsyncResponse, nil
+	return utils.HandleGoroutineErrors(&wg, errorChan)
 }
 
 //RollUP all documents Shards relative to the DistributedCounters.ShardName
