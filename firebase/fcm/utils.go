@@ -24,7 +24,7 @@ func union(a []Topic, b ...Topic) []Topic {
 
 func (cf conditionFragment) toString() string {
 	if len(cf.topics) == 1 {
-		return fmt.Sprintf("%s'%s' in topics", cf.conditionOperator, cf.topics[0])
+		return fmt.Sprintf("%s '%s' in topics", cf.conditionOperator, cf.topics[0])
 	}
 
 	condition := string(cf.conditionOperator) + " ("
