@@ -6,7 +6,7 @@ import (
 	"firebase.google.com/go/messaging"
 )
 
-//Creates a Notification Manager
+//Creates a Notification Manager.
 func GetNotificationManager(app *firebase.App, ctx context.Context) (NotificationManager, error) {
 	client, err := app.Messaging(ctx)
 	return NotificationManager{
@@ -15,7 +15,7 @@ func GetNotificationManager(app *firebase.App, ctx context.Context) (Notificatio
 	}, err
 }
 
-//Send a Message to Multiple Users
+//Send a Message to Multiple Users.
 func (nm *NotificationManager) UsersSendMessage(title, body, url string, data map[string]string, registrationTokens ...string) (*messaging.BatchResponse, error) {
 	messages := &messaging.MulticastMessage{
 		Tokens: registrationTokens,
@@ -30,7 +30,7 @@ func (nm *NotificationManager) UsersSendMessage(title, body, url string, data ma
 	return nm.client.SendMulticast(nm.ctx, messages)
 }
 
-//Send a Message to a single User
+//Send a Message to a single User.
 func (nm *NotificationManager) UserSendMessage(title, body, url string, data map[string]string, registrationToken string) (string, error) {
 
 	// See documentation on defining a message payload.
@@ -49,7 +49,7 @@ func (nm *NotificationManager) UserSendMessage(title, body, url string, data map
 	return nm.client.Send(nm.ctx, message)
 }
 
-//Send a Message to all devices for which the Condition returns True
+//Send a Message to all devices for which the Condition returns True.
 func (nm *NotificationManager) ConditionSendMessage(title, body, url string, data map[string]string, condition string) (string, error) {
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
@@ -67,7 +67,7 @@ func (nm *NotificationManager) ConditionSendMessage(title, body, url string, dat
 	return nm.client.Send(nm.ctx, message)
 }
 
-//Send a Message to all devices subscribed to the given Topic
+//Send a Message to all devices subscribed to the given Topic.
 func (nm *NotificationManager) TopicSendMessage(title, body, url string, data map[string]string, topic string) (string, error) {
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
@@ -85,13 +85,13 @@ func (nm *NotificationManager) TopicSendMessage(title, body, url string, data ma
 	return nm.client.Send(nm.ctx, message)
 }
 
-//Subscribe Users to a given Topic
+//Subscribe Users to a given Topic.
 func (nm *NotificationManager) TopicSubscribe(topic string, registrationToken ...string) (*messaging.TopicManagementResponse, error) {
 	// Subscribe the devices corresponding to the registration tokens to the topic.
 	return nm.client.SubscribeToTopic(nm.ctx, registrationToken, topic)
 }
 
-//Unsubscribe Users from a given Topic
+//Unsubscribe Users from a given Topic.
 func (nm *NotificationManager) TopicUnsubscribe(topic string, registrationToken ...string) (*messaging.TopicManagementResponse, error) {
 	// Subscribe the devices corresponding to the registration tokens to the topic.
 	return nm.client.UnsubscribeFromTopic(nm.ctx, registrationToken, topic)
