@@ -27,10 +27,10 @@ func (cf conditionFragment) toString() string {
 		return fmt.Sprintf("%s'%s' in topics", cf.conditionOperator, cf.topics[0])
 	}
 
-	condition := string(cf.conditionOperator) + " "
+	condition := string(cf.conditionOperator) + " ("
 	for i := 0; i < len(cf.topics)-1; i++ {
 		condition += fmt.Sprintf("'%s' in topics %s", cf.topics[i], cf.operandsOperator)
 	}
-	condition += fmt.Sprintf("'%s' in topics", cf.topics[len(cf.topics)-1])
+	condition += fmt.Sprintf("'%s' in topics )", cf.topics[len(cf.topics)-1])
 	return condition
 }
