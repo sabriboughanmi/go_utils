@@ -86,7 +86,6 @@ func (c *Condition) addCondition(conditionOperator, operandsOperator Operator, o
 //Returns the Constructed Condition
 func (c *Condition) GetCondition() string {
 	if !c.hasChanges {
-		fmt.Printf("Condition Prefetched!")
 		return c.condition
 	}
 	c.hasChanges = false
