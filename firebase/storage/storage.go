@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"google.golang.org/api/iterator"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -200,4 +201,33 @@ func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData
 		return fmt.Errorf("CreateStorageFileFromLocal: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
 	}
 	return nil
+}
+
+//FilesInFolder Lists all Files under a folder prefix.
+//
+//Note!
+//
+//prefix must finish with "/".
+//
+//delimiter must be "/" otherwise all files in SubFolders will be listed.
+func FilesInFolder(bucket, prefix, delimiter string, client *storage.Client, ctx context.Context) (*[]*storage.ObjectAttrs, error) {
+
+	bucketHandle := client.Bucket(bucket)
+	it := bucketHandle.Objects(ctx, &storage.Query{
+		Delimiter: delimiter,
+		Prefix:    prefix,
+	})
+
+	var files []*storage.ObjectAttrs
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("Bucket(%q).Objects(): %v", bucket, err)
+		}
+		files = append(files, attrs)
+	}
+	return &files, nil
 }
