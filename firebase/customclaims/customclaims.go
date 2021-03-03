@@ -8,7 +8,7 @@ import (
 
 
 //SetCustomUserClaims
-func (cc *CustomClaims) SetCustomUserClaims(authClient *auth.Client,ctx context.Context, uid string) error {
+func (cc *CustomClaims) SetUserCustomClaims(authClient *auth.Client,ctx context.Context, uid string) error {
 	return authClient.SetCustomUserClaims(ctx, uid, *cc.ToMap())
 }
 
