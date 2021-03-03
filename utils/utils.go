@@ -1,6 +1,10 @@
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+)
 
 /*
 InterfaceToType Converts an interface to any type.
@@ -16,3 +20,14 @@ func InterfaceAs(inter interface{}, myType interface{}) error {
 	return json.Unmarshal(bytes, myType)
 }
 
+
+//ValidateEmail checks if an email address is in valid format
+func ValidateEmail(email string) error {
+	if email == "" {
+		return fmt.Errorf("email must be a non-empty string")
+	}
+	if parts := strings.Split(email, "@"); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return fmt.Errorf("malformed email string: %q", email)
+	}
+	return nil
+}
