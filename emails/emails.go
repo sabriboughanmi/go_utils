@@ -19,8 +19,7 @@ type EmailAddress struct {
 //SendEmailHTML Sends an email to single user
 func (emailAddress *EmailAddress) SendEmailHTML(to string, emailSubject string, htmlCode string) (bool, error) {
 
-	var emailAuth smtp.Auth
-	emailAuth = smtp.PlainAuth("", emailAddress.Address, emailAddress.Password, emailAddress.Host)
+	emailAuth := smtp.PlainAuth("", emailAddress.Address, emailAddress.Password, emailAddress.Host)
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	subject := "Subject: " + emailSubject + "!\n"
@@ -43,8 +42,7 @@ func (emailAddress *EmailAddress) SendEmail(to string, emailSubject string, emai
 
 	fmt.Println(string(bytes))
 
-	var emailAuth smtp.Auth
-	emailAuth = smtp.PlainAuth("", emailAddress.Address, emailAddress.Password, emailAddress.Host)
+	emailAuth := smtp.PlainAuth("", emailAddress.Address, emailAddress.Password, emailAddress.Host)
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 	subject := "Subject: " + emailSubject + "!\n"
@@ -53,7 +51,7 @@ func (emailAddress *EmailAddress) SendEmail(to string, emailSubject string, emai
 
 	fmt.Println(addr)
 
-	if err := smtp.SendMail(addr, emailAuth, emailAddress.Address, []string{to}, msg); err != nil {
+	if err = smtp.SendMail(addr, emailAuth, emailAddress.Address, []string{to}, msg); err != nil {
 		return false, err
 	}
 	return true, nil
