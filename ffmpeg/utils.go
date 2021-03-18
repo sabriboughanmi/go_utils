@@ -1,6 +1,8 @@
 package ffmpeg
 
-import "time"
+import (
+	"time"
+)
 
 func (v *Video) clampToDuration(t time.Duration) time.Duration {
 	if t < 0 {
@@ -12,8 +14,6 @@ func (v *Video) clampToDuration(t time.Duration) time.Duration {
 	return t
 }
 
-
-
 func isEvenNumber(n int) bool {
 	return n%2 == 0
 }
@@ -24,8 +24,6 @@ func toEvenNumber(n int) int {
 	}
 	return n + 1
 }
-
-
 
 // commandLine returns the command line that will be used to convert the Video
 // if you were to call Render.

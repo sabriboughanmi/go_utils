@@ -247,6 +247,46 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 	return nil
 }
 
+
+
+// GetThumbnail Creates a Thumbnail at path for a given time
+func (v *EditableVideo) GetThumbnail(outputPath string, second float64) error{
+
+	/*var width, height int
+	if v.width > v.height {
+		width = v.width
+		height = v.height
+	} else {
+		width = v.height
+		height = v.width
+	}*/
+
+	//ffmpeg -i InputFile.FLV -vframes 1 -an -s 400x222 -ss 30 OutputFile.jpg
+
+	cmds := []string{
+		"ffmpeg",
+		"-y",
+		"-i", v.filepath,
+		"-vframes", "1", "-an",
+		"-s", fmt.Sprintf("%dx%d", v.width,v.height),
+		"-ss", strconv.FormatFloat(second,'f', -1, 64),
+		outputPath,
+	}
+
+	cmd := exec.Command(cmds[0], cmds[1:]...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
+	}
+	return nil
+}
+
+
+
 // Render applies all operations to the Video and creates an output video file
 // of the given name. This method won't return anything on stdout / stderr.
 // If you need to read ffmpeg's outputs, use RenderWithStreams
@@ -425,3 +465,4 @@ func (v *Video) Crop(x, y, width, height int) {
 func (v *Video) Filepath() string {
 	return v.filepath
 }
+
