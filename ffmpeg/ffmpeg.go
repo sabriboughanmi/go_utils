@@ -13,54 +13,6 @@ import (
 	"time"
 )
 
-// ScreenOrientation defines if a video is Portrait or Landscape
-type ScreenOrientation byte
-
-const (
-	Portrait  ScreenOrientation = 0
-	Landscape ScreenOrientation = 1
-)
-
-type VideoResolution int
-
-// ConversionPreset .
-type ConversionPreset string
-
-const (
-	Ultrafast ConversionPreset = "ultrafast"
-	Superfast ConversionPreset = "superfast"
-	Veryfast  ConversionPreset = "veryfast"
-	Faster    ConversionPreset = "faster"
-	Fast      ConversionPreset = "fast"
-	Medium    ConversionPreset = "medium"
-	Slow      ConversionPreset = "slow"
-	Slower    ConversionPreset = "slower"
-	Veryslow  ConversionPreset = "veryslow"
-	Placebo   ConversionPreset = "placebo"
-)
-
-// EditableVideo and Editable Video representation which  contains information about a video file and all the operations that
-// need to be applied to it. Call Load to initialize a Video from file. Call the
-// transformation functions to generate the desired output. Then call Render to
-// generate the final output video file.
-type EditableVideo Video
-
-// Video contains information about a video file and all the operations that
-// need to be applied to it. Call Load to initialize a Video from file. Call the
-// transformation functions to generate the desired output. Then call Render to
-// generate the final output video file.
-type Video struct {
-	filepath       string
-	width          int
-	height         int
-	fps            int
-	bitrate        int
-	start          time.Duration
-	end            time.Duration
-	duration       time.Duration
-	filters        []string
-	additionalArgs []string
-}
 
 // GetVideoOrientation returns the video Screen Orientation
 func (v *Video) GetVideoOrientation() ScreenOrientation {
@@ -313,7 +265,7 @@ func (v *EditableVideo) RenderInBackground(output string) (*exec.Cmd, error) {
 // of the given name. By specifying an output stream and an error stream, you can read
 // ffmpeg's stdout and stderr.
 func (v *EditableVideo) RenderWithStreamsInBackground(output string, os io.Writer) (*exec.Cmd, error) {
-	line := v.CommandLine(output)
+	line := v.commandLine(output)
 	fmt.Println(line)
 
 	cmd := exec.Command(line[0], line[1:]...)
@@ -333,7 +285,7 @@ func (v *EditableVideo) RenderWithStreamsInBackground(output string, os io.Write
 // of the given name. By specifying an output stream and an error stream, you can read
 // ffmpeg's stdout and stderr.
 func (v *EditableVideo) RenderWithStreams(output string, os io.Writer, es io.Writer) error {
-	line := v.CommandLine(output)
+	line := v.commandLine(output)
 	fmt.Println(line)
 
 	cmd := exec.Command(line[0], line[1:]...)
@@ -346,26 +298,6 @@ func (v *EditableVideo) RenderWithStreams(output string, os io.Writer, es io.Wri
 		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
 	}
 	return nil
-}
-
-// CommandLine returns the command line that will be used to convert the Video
-// if you were to call Render.
-func (v *EditableVideo) CommandLine(output string) []string {
-
-	additionalArgs := v.additionalArgs
-
-	cmdline := []string{
-		"ffmpeg",
-		"-y",
-		"-i", v.filepath,
-		"-vcodec", "libx264",
-		//	"-ss", strconv.FormatFloat(v.start.Seconds(), 'f', -1, 64),
-		//	"-t", strconv.FormatFloat((v.end - v.start).Seconds(), 'f', -1, 64),
-		//	"-vb", strconv.Itoa(v.bitrate),
-	}
-	cmdline = append(cmdline, additionalArgs...)
-	cmdline = append(cmdline, output)
-	return cmdline
 }
 
 // Mute mutes the video
@@ -398,15 +330,6 @@ func (v *Video) SetStart(start time.Duration) {
 	}
 }
 
-func (v *Video) clampToDuration(t time.Duration) time.Duration {
-	if t < 0 {
-		t = 0
-	}
-	if t > v.duration {
-		t = v.duration
-	}
-	return t
-}
 
 // End returns the end of the video.
 func (v *Video) End() time.Duration {
@@ -451,17 +374,6 @@ func (v *EditableVideo) SetPreset(preset ConversionPreset) {
 func (v *EditableVideo) SetConstantRateFactor(value int) {
 	v.additionalArgs = append(v.additionalArgs, "-crf")
 	v.additionalArgs = append(v.additionalArgs, strconv.Itoa(value))
-}
-
-func isEvenNumber(n int) bool {
-	return n%2 == 0
-}
-
-func toEvenNumber(n int) int {
-	if isEvenNumber(n) {
-		return n
-	}
-	return n + 1
 }
 
 //GetResolutions returns the video (Width,Height) tuple for a specific VideoResolution
