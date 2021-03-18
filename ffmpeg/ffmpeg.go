@@ -306,7 +306,7 @@ func (v *EditableVideo) RenderInBackground(output string) (*exec.Cmd, error) {
 // ffmpeg's stdout and stderr.
 func (v *EditableVideo) RenderWithStreamsInBackground(output string, os io.Writer) (*exec.Cmd, error) {
 	line := v.commandLine(output)
-	fmt.Println(line)
+	//fmt.Println(line)
 
 	cmd := exec.Command(line[0], line[1:]...)
 
