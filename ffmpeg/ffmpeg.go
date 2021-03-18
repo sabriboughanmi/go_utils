@@ -232,7 +232,7 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 	cmdline = append(cmdline, fmt.Sprintf("[1]scale=%d:%d[wm];[0][wm]overlay=10:10", widthSize, heightSize))
 	cmdline = append(cmdline, outputPath)
 
-	fmt.Println(cmdline)
+	//fmt.Println(cmdline)
 	cmd := exec.Command(cmdline[0], cmdline[1:]...)
 
 	var stderr bytes.Buffer
@@ -326,7 +326,7 @@ func (v *EditableVideo) RenderWithStreamsInBackground(output string, os io.Write
 // ffmpeg's stdout and stderr.
 func (v *EditableVideo) RenderWithStreams(output string, os io.Writer, es io.Writer) error {
 	line := v.commandLine(output)
-	fmt.Println(line)
+	//fmt.Println(line)
 
 	cmd := exec.Command(line[0], line[1:]...)
 	var stderr bytes.Buffer
