@@ -147,6 +147,7 @@ func RemoveFile(bucket, name string, client *storage.Client, ctx context.Context
 	return nil
 }
 
+
 // RemoveFile Removes a file from Storage
 func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket string, names ...string) error {
 	bucketHandle := client.Bucket(bucket)
@@ -173,6 +174,7 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 
 	return nil
 }
+
 
 // CreateFile creates a file in Google Cloud Storage.
 func CreateFile(bucket, fileName string, content []byte, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
