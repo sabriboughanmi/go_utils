@@ -135,9 +135,8 @@ func CopyFile(srcBucket, dstBucket, srcName, dstName string, client *storage.Cli
 	if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
 		return fmt.Errorf("Object(%q).CopierFrom(%q).Run: %v", dstName, srcName, err)
 	}
- 	return nil
+	return nil
 }
-
 
 // RemoveFile Removes a file from Storage
 func RemoveFile(bucket, name string, client *storage.Client, ctx context.Context) error {
@@ -157,7 +156,7 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 
 	for _, storagePath := range names {
 		wg.Add(1)
-		func(errorChan chan error, waitGroup *sync.WaitGroup) {
+		go func(errorChan chan error, waitGroup *sync.WaitGroup) {
 			defer waitGroup.Done()
 			objHandle := bucketHandle.Object(storagePath)
 			if err := objHandle.Delete(ctx); err != nil {
