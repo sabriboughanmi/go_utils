@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/firebase/storage/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/userprivileges/userprivileges.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/userprivileges/userprivileges.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/userprivileges/utilities.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/userprivileges/utilities.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,20 +64,20 @@
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
       <kind value="FILE" />
-      <filePath value="$PROJECT_DIR$" />
       <package value="utilities" />
       <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="t4ulabsutils" />
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
-      <framework value="gotest" />
       <kind value="DIRECTORY" />
       <package value="utilities" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
   </component>

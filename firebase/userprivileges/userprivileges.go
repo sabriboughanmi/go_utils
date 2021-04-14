@@ -47,7 +47,7 @@ func (client *UserPrivilegeClient)HasPrivilegesByID(userID string, privileges ..
 		return false,nil
 	}
 
-	if len(difference(privileges, userPrivileges)) > 0{
+	if len(Difference(privileges, userPrivileges)) > 0{
 		return false,nil
 	}
 
@@ -68,7 +68,7 @@ func (client *UserPrivilegeClient)HasPrivileges(userRecord *auth.UserRecord, pri
 		return false
 	}
 
-	if len(difference(privileges, userPrivileges)) > 0{
+	if len(Difference(privileges, userPrivileges)) > 0{
 		return false
 	}
 
@@ -93,7 +93,7 @@ func (client *UserPrivilegeClient)SetUserPrivilegesByID(userID string, privilege
 		}
 	}
 
-	privilegesToAdd :=  difference(privileges, userPrivileges)
+	privilegesToAdd :=  Difference(privileges, userPrivileges)
 	userPrivileges = append(userPrivileges, privilegesToAdd...)
 
 	userRecord.CustomClaims[CustomClaimsPrivileges] = userPrivileges
@@ -114,7 +114,7 @@ func (client *UserPrivilegeClient)SetUserPrivileges(userRecord *auth.UserRecord,
 		}
 	}
 
-	privilegesToAdd :=  difference(privileges, userPrivileges)
+	privilegesToAdd :=  Difference(privileges, userPrivileges)
 	userPrivileges = append(userPrivileges, privilegesToAdd...)
 
 	userRecord.CustomClaims[CustomClaimsPrivileges] = userPrivileges

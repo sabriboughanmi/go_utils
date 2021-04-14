@@ -4,7 +4,7 @@ package userprivileges
 //Difference returns the Difference between 2 arrays (A - B)
 //EG: a :[1, 2, 3, 4, 5]  - b: [2, 3, 5, 7, 11] =
 // result: [1 4].
-func difference(a, b []Privilege) (diff []Privilege) {
+func Difference(a, b []Privilege) (diff []Privilege) {
 	m := make(map[Privilege]bool)
 
 	for _, item := range b {
