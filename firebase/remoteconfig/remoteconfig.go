@@ -25,7 +25,7 @@ type ProjectConfig struct {
 }
 
 //ServiceAccountInit Initialize the Service Account using Parameters
-func InitFromCredentials(email, privateKey, projectID string) (ProjectConfig, error) {
+func InitFromCredentials(email, privateKey, projectID string) (*ProjectConfig, error) {
 	var projectConfig ProjectConfig
 	config := &jwt.Config{
 		Email:      email,
@@ -38,7 +38,7 @@ func InitFromCredentials(email, privateKey, projectID string) (ProjectConfig, er
 
 	token, err := config.TokenSource(oauth2.NoContext).Token()
 	if err != nil {
-		return projectConfig, err
+		return &projectConfig, err
 	}
 
 	projectConfig.baseURl = "https://firebaseremoteconfig.googleapis.com"
@@ -46,15 +46,15 @@ func InitFromCredentials(email, privateKey, projectID string) (ProjectConfig, er
 	projectConfig.remoteConfigURL = projectConfig.baseURl + "/" + projectConfig.remoteConfigEndPoint
 	projectConfig.token = token
 
-	return projectConfig, nil
+	return &projectConfig, nil
 }
 
 //ServiceAccount Initialize the Service Account using a ServiceAccount.Json Path
-func InitFromPath(serviceAccountPath string) (ProjectConfig, error) {
+func InitFromPath(serviceAccountPath string) (*ProjectConfig, error) {
 	var projectConfig ProjectConfig
 	b, err := ioutil.ReadFile(serviceAccountPath)
 	if err != nil {
-		return projectConfig, err
+		return &projectConfig, err
 	}
 	var c = struct {
 		Email      string `json:"client_email"`
@@ -74,7 +74,7 @@ func InitFromPath(serviceAccountPath string) (ProjectConfig, error) {
 
 	token, err := config.TokenSource(oauth2.NoContext).Token()
 	if err != nil {
-		return projectConfig, err
+		return &projectConfig, err
 	}
 
 	projectConfig.baseURl = "https://firebaseremoteconfig.googleapis.com"
@@ -82,7 +82,7 @@ func InitFromPath(serviceAccountPath string) (ProjectConfig, error) {
 	projectConfig.remoteConfigURL = projectConfig.baseURl + "/" + projectConfig.remoteConfigEndPoint
 	projectConfig.token = token
 
-	return projectConfig, nil
+	return &projectConfig, nil
 }
 
 func (pc *ProjectConfig) Publish(Etag string) (string, error) {
