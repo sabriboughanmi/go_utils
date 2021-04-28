@@ -42,11 +42,16 @@ func FileExists(bucket, storagePath string, client *storage.Client, ctx context.
 
 	bucketHandle := client.Bucket(bucket)
 	objectHandle := bucketHandle.Object(storagePath)
-	if _, err := objectHandle.Attrs(ctx); err != nil {
+	_, err := objectHandle.Attrs(ctx)
+	if err == nil{
+		return true, nil
+	}
+
+	if err == storage.ErrObjectNotExist{
 		return false, nil
 	}
 
-	return true, nil
+	return false, err
 }
 
 //LoadFileInTempPath Loads a file from Storage to an OS path
