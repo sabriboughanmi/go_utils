@@ -151,19 +151,19 @@ func (pc *ProjectConfig) RollbackVersion(version int) error {
 }
 
 //GetRemoteConfig get the Remote Config Value
-func (pc *ProjectConfig) GetRemoteConfig() (RemoteConfig, error) {
+func (pc *ProjectConfig) GetRemoteConfig() (*RemoteConfig, error) {
 	var remoteConfig RemoteConfig
 
 	req, err := http.NewRequest("GET", pc.remoteConfigURL, nil)
 	if err != nil {
-		return remoteConfig, err
+		return &remoteConfig, err
 	}
 
 	// Set Authorization Header
 	req.Header.Set("Authorization", "Bearer "+pc.token.AccessToken)
 	resp, err := client.Do(req)
 	if err != nil {
-		return remoteConfig, err
+		return &remoteConfig, err
 	}
 
 	// if resp.Status is 200
@@ -175,14 +175,14 @@ func (pc *ProjectConfig) GetRemoteConfig() (RemoteConfig, error) {
 		// Read response body
 		bytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return remoteConfig, err
+			return &remoteConfig, err
 		}
 
 		err = json.Unmarshal(bytes, &remoteConfig)
 		// Convert Response Body to String
-		return remoteConfig, err
+		return &remoteConfig, err
 	}
-	return remoteConfig, fmt.Errorf("resp StatusCode : %d", resp.StatusCode)
+	return &remoteConfig, fmt.Errorf("resp StatusCode : %d", resp.StatusCode)
 }
 
 func (pc *ProjectConfig) ListVersion(size int) (string, error) {
