@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sabriboughanmi/go_utils/ffmpeg"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"io"
 	"os"
@@ -200,7 +199,7 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 //LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
 //Note! path and Fragments need to be already Existing.
 //Note! this function will ReEncode all videos to fit the lowest resolution.
-func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*ffmpeg.Video, error) {
+func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Video, error) {
 
 	if len(fragmentsPath) <2{
 		return nil, fmt.Errorf("at least 2 fragments must be passed")
@@ -272,7 +271,7 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*ffm
 		return nil, fmt.Errorf(stderr.String())
 	}
 
-	return ffmpeg.LoadVideo(path)
+	return LoadVideo(path)
 }
 
 
