@@ -270,7 +270,6 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	if err = cmd.Run(); err != nil {
 		return nil, fmt.Errorf(stderr.String())
 	}
-
 	return LoadVideo(path)
 }
 
