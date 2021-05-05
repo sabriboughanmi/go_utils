@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sabriboughanmi/go_utils/ffmpeg"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"io"
 	"os"
@@ -195,6 +196,85 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 
 	return LoadVideo(path)
 }
+
+//LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
+//Note! path and Fragments need to be already Existing.
+//Note! this function will ReEncode all videos to fit the lowest resolution.
+func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*ffmpeg.Video, error) {
+
+	if len(fragmentsPath) <2{
+		return nil, fmt.Errorf("at least 2 fragments must be passed")
+	}
+
+	importList := `# Fragments Paths`
+	for _, p := range fragmentsPath {
+		importList += fmt.Sprintf("\nfile '%s'", p)
+	}
+
+	listPath, err := osUtils.CreateTempFile("list.txt", []byte(importList))
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(listPath)
+
+	cmdline := []string{
+		"ffmpeg",
+		"-y",
+	}
+
+	//get the lowest video resolution
+	var lowestRes = VideoResolution(8000)
+
+	//Add Inputs
+	for i := 0; i < len(fragmentsPath); i++ {
+		cmdline = append(cmdline, "-i", fragmentsPath[i])
+		video, err := LoadVideo(fragmentsPath[i])
+		if err !=nil{
+			return  nil,err
+		}
+
+		//Get the Lowest Resolution available, otherwise ffmpeg will throw an error while merging the videos
+		currentVideoRes := video.GetVideoResolution()
+		if lowestRes > currentVideoRes{
+			lowestRes = currentVideoRes
+		}
+	}
+
+
+
+	//Construct Fragments Resolutions
+	var filterComplex = ""
+	for i := 0; i < len(fragmentsPath); i++ {
+		filterComplex += fmt.Sprintf("[%d]scale=%d:-2:force_original_aspect_ratio=decrease,setsar=1[v%d];", i, lowestRes, i)
+	}
+
+	for i := 0; i < len(fragmentsPath); i++ {
+		filterComplex += fmt.Sprintf("[v%d][%d:a:0]", i, i)
+	}
+
+	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=1[v][a]", len(fragmentsPath))
+
+	//Add -filter_complex
+	cmdline = append(cmdline, "-filter_complex", filterComplex)
+
+	// Add the Output
+	cmdline = append(cmdline, "-map", "[v]","-map", "[a]", path )
+
+	//fmt.Println(cmdline)
+
+	cmd := exec.Command(cmdline[0], cmdline[1:]...)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	if err = cmd.Run(); err != nil {
+		return nil, fmt.Errorf(stderr.String())
+	}
+
+	return ffmpeg.LoadVideo(path)
+}
+
 
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
 func (v *Video) GetEditableVideo() *EditableVideo {
