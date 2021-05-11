@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-
 // GetVideoOrientation returns the video Screen Orientation
 func (v *Video) GetVideoOrientation() ScreenOrientation {
 
@@ -146,6 +145,17 @@ func LoadVideo(path string) (*Video, error) {
 		height:   height,
 		fps:      30,
 		bitrate:  int(bitrate),
+		rotate: func() *int {
+			if desc.Streams[dsIndex].Tags.Rotation == nil {
+				return nil
+			}
+			rotation, err := desc.Streams[dsIndex].Tags.Rotation.Int64()
+			if err != nil {
+				return nil
+			}
+			var rotationInt = int(rotation)
+			return &rotationInt
+		}(),
 		start:    0,
 		end:      duration,
 		duration: duration,
@@ -201,7 +211,7 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 //Note! this function will ReEncode all videos to fit the lowest resolution.
 func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Video, error) {
 
-	if len(fragmentsPath) <2{
+	if len(fragmentsPath) < 2 {
 		return nil, fmt.Errorf("at least 2 fragments must be passed")
 	}
 
@@ -228,18 +238,16 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	for i := 0; i < len(fragmentsPath); i++ {
 		cmdline = append(cmdline, "-i", fragmentsPath[i])
 		video, err := LoadVideo(fragmentsPath[i])
-		if err !=nil{
-			return  nil,err
+		if err != nil {
+			return nil, err
 		}
 
 		//Get the Lowest Resolution available, otherwise ffmpeg will throw an error while merging the videos
 		currentVideoRes := video.GetVideoResolution()
-		if lowestRes > currentVideoRes{
+		if lowestRes > currentVideoRes {
 			lowestRes = currentVideoRes
 		}
 	}
-
-
 
 	//Construct Fragments Resolutions
 	var filterComplex = ""
@@ -257,7 +265,7 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	cmdline = append(cmdline, "-filter_complex", filterComplex)
 
 	// Add the Output
-	cmdline = append(cmdline, "-map", "[v]","-map", "[a]", path )
+	cmdline = append(cmdline, "-map", "[v]", "-map", "[a]", path)
 
 	//fmt.Println(cmdline)
 
@@ -272,7 +280,6 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	}
 	return LoadVideo(path)
 }
-
 
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
 func (v *Video) GetEditableVideo() *EditableVideo {
@@ -325,10 +332,8 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 	return nil
 }
 
-
-
 // GetThumbnail Creates a Thumbnail at path for a given time
-func (v *EditableVideo) GetThumbnail(outputPath string, second float64) error{
+func (v *EditableVideo) GetThumbnail(outputPath string, second float64) error {
 
 	/*var width, height int
 	if v.width > v.height {
@@ -346,8 +351,8 @@ func (v *EditableVideo) GetThumbnail(outputPath string, second float64) error{
 		"-y",
 		"-i", v.filepath,
 		"-vframes", "1", "-an",
-		"-s", fmt.Sprintf("%dx%d", v.width,v.height),
-		"-ss", strconv.FormatFloat(second,'f', -1, 64),
+		"-s", fmt.Sprintf("%dx%d", v.width, v.height),
+		"-ss", strconv.FormatFloat(second, 'f', -1, 64),
 		outputPath,
 	}
 
@@ -362,8 +367,6 @@ func (v *EditableVideo) GetThumbnail(outputPath string, second float64) error{
 	}
 	return nil
 }
-
-
 
 // Render applies all operations to the Video and creates an output video file
 // of the given name. This method won't return anything on stdout / stderr.
@@ -447,7 +450,6 @@ func (v *Video) SetStart(start time.Duration) {
 		v.end = v.start
 	}
 }
-
 
 // End returns the end of the video.
 func (v *Video) End() time.Duration {
@@ -543,4 +545,3 @@ func (v *Video) Crop(x, y, width, height int) {
 func (v *Video) Filepath() string {
 	return v.filepath
 }
-
