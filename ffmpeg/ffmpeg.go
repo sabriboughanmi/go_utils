@@ -15,7 +15,6 @@ import (
 
 // GetVideoOrientation returns the video Screen Orientation
 func (v *Video) GetVideoOrientation() ScreenOrientation {
-
 	if v.width > v.height {
 		return Landscape
 	}
