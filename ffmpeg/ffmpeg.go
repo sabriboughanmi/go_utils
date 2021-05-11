@@ -22,9 +22,8 @@ func (v *Video) GetVideoOrientation() ScreenOrientation {
 	return Portrait
 }
 
-// GetVideoOrientation returns the video Screen Orientation
+// GetVideoRotate returns the video Screen Orientation
 func (v *Video) GetVideoRotate() *int {
-
 	return v.rotate
 }
 
