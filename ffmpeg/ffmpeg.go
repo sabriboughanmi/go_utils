@@ -287,15 +287,7 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
 func (v *Video) GetEditableVideo() *EditableVideo {
-	var eVideo EditableVideo
-	eVideo.filepath = v.filepath
-	eVideo.width = v.width
-	eVideo.height = v.height
-	eVideo.fps = v.fps
-	eVideo.bitrate = v.bitrate
-	eVideo.start = v.start
-	eVideo.end = v.end
-	eVideo.duration = v.duration
+	var eVideo = EditableVideo(*v)
 
 	eVideo.filters = make([]string, len(v.filters))
 	copy(eVideo.filters, v.filters)
