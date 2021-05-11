@@ -22,6 +22,12 @@ func (v *Video) GetVideoOrientation() ScreenOrientation {
 	return Portrait
 }
 
+// GetVideoOrientation returns the video Screen Orientation
+func (v *Video) GetVideoRotate() *int {
+
+	return v.rotate
+}
+
 //GetEditableVideoResolution returns the lowest value between  width and height
 func (v *EditableVideo) GetEditableVideoResolution() VideoResolution {
 	if v.width > v.height {
