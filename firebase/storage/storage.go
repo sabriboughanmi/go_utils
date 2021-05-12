@@ -43,11 +43,11 @@ func FileExists(bucket, storagePath string, client *storage.Client, ctx context.
 	bucketHandle := client.Bucket(bucket)
 	objectHandle := bucketHandle.Object(storagePath)
 	_, err := objectHandle.Attrs(ctx)
-	if err == nil{
+	if err == nil {
 		return true, nil
 	}
 
-	if err == storage.ErrObjectNotExist{
+	if err == storage.ErrObjectNotExist {
 		return false, nil
 	}
 
@@ -152,7 +152,6 @@ func RemoveFile(bucket, name string, client *storage.Client, ctx context.Context
 	return nil
 }
 
-
 // RemoveFile Removes a file from Storage
 func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket string, names ...string) error {
 	bucketHandle := client.Bucket(bucket)
@@ -166,9 +165,12 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 			defer waitGroup.Done()
 			objHandle := bucketHandle.Object(storagePath)
 			if err := objHandle.Delete(ctx); err != nil {
-				if  err != storage.ErrObjectNotExist{
-					errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
+				if err == storage.ErrObjectNotExist {
+					fmt.Printf("Error Skipped: trying to Remove an unexisting File: %s \n", storagePath)
+					return
 				}
+
+				errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
 				return
 			}
 		}(errChan, &wg)
@@ -181,7 +183,6 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 
 	return nil
 }
-
 
 // CreateFile creates a file in Google Cloud Storage.
 func CreateFile(bucket, fileName string, content []byte, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
