@@ -166,7 +166,9 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 			defer waitGroup.Done()
 			objHandle := bucketHandle.Object(storagePath)
 			if err := objHandle.Delete(ctx); err != nil {
-				errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
+				if  err != storage.ErrObjectNotExist{
+					errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
+				}
 				return
 			}
 		}(errChan, &wg)
