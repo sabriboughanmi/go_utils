@@ -65,18 +65,24 @@ func LoadVideo(path string) (*Video, error) {
 		return nil, errors.New("cinema.Load: unable to load file: " + err.Error())
 	}
 
-	cmd := exec.Command(
-		"ffprobe",
+	cmdArgs := []string{"ffprobe",
 		"-v", "quiet",
 		"-print_format", "json",
 		"-show_format",
 		"-show_streams",
-		path,
-	)
+		path}
+
+	fmt.Println(cmdArgs)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+
+	var stderr bytes.Buffer
+	var stdout bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
 	out, err := cmd.Output()
 
 	if err != nil {
-		return nil, errors.New("cinema.Load: ffprobe failed: " + err.Error())
+		return nil, errors.New("Load: ffprobe failed with Error: " + stderr.String() + stdout.String())
 	}
 
 	type description struct {
@@ -285,8 +291,6 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	return LoadVideo(path)
 }
 
-
-
 //LoadVideoFromReEncodedFragmentsIgnoreRotation returns a merged Video that can be operated on.
 //Note! path and Fragments need to be already Existing.
 //Note! this function will ReEncode all videos to fit the lowest resolution and Rotation will be ignored.
@@ -465,9 +469,6 @@ func LoadVideoFromReEncodedFragmentsIgnoreRotation(path string, fragmentsPath ..
 	return LoadVideo(path)
 }
 
-
-
-
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
 func (v *Video) GetEditableVideo() *EditableVideo {
 	var eVideo = EditableVideo(*v)
@@ -501,6 +502,27 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 
 	var stderr bytes.Buffer
 
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
+	}
+	return nil
+}
+
+// ConvertFromTo Converts any media file type to another
+func ConvertFromTo(inputPath, outputPath string) error {
+	cmds := []string{
+		"ffmpeg",
+		"-y",
+		"-i", inputPath,
+		outputPath,
+	}
+
+	cmd := exec.Command(cmds[0], cmds[1:]...)
+	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmd.Stdout = nil
 
@@ -586,7 +608,7 @@ func (v *EditableVideo) RenderWithStreamsInBackground(output string, os io.Write
 // ffmpeg's stdout and stderr.
 func (v *EditableVideo) RenderWithStreams(output string, os io.Writer, es io.Writer) error {
 	line := v.commandLine(output)
-	//fmt.Println(line)
+	fmt.Println(line)
 
 	cmd := exec.Command(line[0], line[1:]...)
 	var stderr bytes.Buffer
