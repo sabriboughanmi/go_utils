@@ -50,6 +50,37 @@ func (v *EditableVideo) GetAspectRatio() float32 {
 	return float32(v.height) / float32(v.width)
 }
 
+//GetDuration return Video Duration in Seconds
+func (v *Video) GetDuration()float64{
+	return v.duration.Seconds()
+}
+
+
+// GetThumbnailAtSec Creates a Thumbnail at path for a given time
+func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
+
+	cmds := []string{
+		"ffmpeg",
+		"-y",
+		"-i", v.filepath,
+		"-vframes", "1", "-an",
+		"-s", fmt.Sprintf("%dx%d", v.width, v.height),
+		"-ss", strconv.FormatFloat(second, 'f', -1, 64),
+		outputPath,
+	}
+
+	cmd := exec.Command(cmds[0], cmds[1:]...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
+	}
+	return nil
+}
+
 // LoadVideo gives you a Video that can be operated on. Load does not open the file
 // or load it into memory. Apply operations to the Video and call Render to
 // generate the output video file.
