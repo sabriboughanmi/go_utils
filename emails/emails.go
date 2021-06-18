@@ -8,11 +8,13 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"net"
 	"net/mail"
 	"net/smtp"
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 //returns an EmailAddress to be used for sending Emails
@@ -229,3 +231,20 @@ func (e *Email) Send(senderAddress EmailAddress) error {
 	return smtp.SendMail(senderAddress.addr(), auth, sender, to, raw)
 }
 
+
+// isEmailValid checks if the email provided passes the required structure
+// and length test. It also checks the domain has a valid MX record.
+func isEmailValid(e string) bool {
+	if len(e) < 3 && len(e) > 254 {
+		return false
+	}
+	if !emailRegex.MatchString(e) {
+		return false
+	}
+	parts := strings.Split(e, "@")
+	mx, err := net.LookupMX(parts[1])
+	if err != nil || len(mx) == 0 {
+		return false
+	}
+	return true
+}

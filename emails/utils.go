@@ -15,6 +15,7 @@ import (
 	"net/mail"
 	"net/textproto"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -267,4 +268,7 @@ func (ea *EmailAddress) parseSender() (string, error) {
 	return from.Address, nil
 }
 
+
+
+var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
