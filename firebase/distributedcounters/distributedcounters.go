@@ -195,38 +195,6 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	return err
 }
 
-/*
-type RollUpAsyncResponse struct {
-	responseChan []chan error
-	response     []error
-}
-
-func (rar *RollUpAsyncResponse) addChan(channel chan error) {
-	rar.responseChan = append(rar.responseChan, channel)
-}
-
-func (rar *RollUpAsyncResponse) Await() {
-	rar.response = make([]error, len(rar.responseChan))
-	for i := 0; i < len(rar.responseChan); i++ {
-		rar.response[i] =  <-rar.responseChan[i]
-	}
-}
-
-func (rar *RollUpAsyncResponse) HasErrors() []error {
-	var errorsArray []error
-	for i := 0; i < len(rar.response); i++ {
-		if rar.response[i] != nil {
-			errorsArray = append(errorsArray, rar.response[i])
-		}
-	}
-	if len(errorsArray) == 0 {
-		return nil
-	}
-
-	return errorsArray
-}
-*/
-
 //RollUP all documents Shards relative to the DistributedCounters.ShardName
 //This function Executes multiple RollUps in parallel. (parallelDocumentsCount will be multiplied by the ShardCount and used as Query Limiter)
 func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int) error {
