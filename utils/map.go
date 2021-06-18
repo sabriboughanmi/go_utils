@@ -12,6 +12,7 @@ func GetValueFromSubMap(dict map[string]interface{}, keyPath string) (interface{
 
 	var currentMap = dict
 	var done = false
+
 	for i := 0; i < len(keys)-1; i++ {
 		key := keys[i]
 		currentMap, done = currentMap[key].(map[string]interface{})
