@@ -51,3 +51,27 @@ func RandomstringCharset(length int, charset string) string {
 	}
 	return string(b)
 }
+
+
+
+// ContainsProfanity returns if a string contains BadWords.
+func ContainsProfanity(str string) (bool, string) {
+	for _, forbiddenWord := range BadWords {
+		if test := strings.Index(strings.ToLower(str), forbiddenWord); test > -1 {
+			//if test := strings.EqualFold(strings.ToLower(word), forbiddenWord); test == true {
+			return true, forbiddenWord
+		}
+	}
+	return false, ""
+}
+
+// ContainsSpecialCharacters returns if a string contains SpecialCharacters.
+func ContainsSpecialCharacters(str string) (bool, string) {
+	for _, forbiddenCharacter := range SpecialCharacters {
+		if test := strings.Index(strings.ToLower(str), forbiddenCharacter); test > -1 {
+			//if test := strings.EqualFold(strings.ToLower(word), forbiddenWord); test == true {
+			return true, forbiddenCharacter
+		}
+	}
+	return false, ""
+}
