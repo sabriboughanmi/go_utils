@@ -2,34 +2,30 @@ package utils
 
 import (
 	"fmt"
-	"net/url"
 	"testing"
 )
 
 func TestRequestUrlToStruct(t *testing.T) {
-	var sampleUrl = "data[name]=Dipesh Dulal&data[id]=12&data[json][name]=dipesh&data[json][id]=64&data[json][fl]=5.05&message=succesfully bind to getRequestInput"
-	sampleRequestURL, _ := url.ParseRequestURI(sampleUrl)
+	var sampleUrl = "employee[name]=sonoo&employee[salary]=56000&employee[married]=true&employee[employee][name]=sonoo&employee[employee][salary]=100000&employee[employee][married]=true&Sexe=male"
 
-	type JSON struct {
-		Name string `json:"name"`
-		ID   int    `json:"id"`
+	type Employee struct {
+		Name     string    `json:"name"`
+		Salary   int64     `json:"salary"`
+		Married  bool      `json:"married"`
+		Employee *Employee `json:"employee,omitempty"`
 	}
-	type Data struct {
-		Name string `json:"name"`
-		ID   uint8  `json:"id"`
-		JSON JSON   `json:"json"`
-	}
-
-	type Main struct {
-		Data    Data   `json:"data"`
-		Message string `json:"message"`
+	type Person struct {
+		Employee Employee `json:"employee"`
+		Sexe     string   `json:"Sexe"`
 	}
 
-	var main Main
+	var main Person
 
-	if err := RequestUrlToStruct(sampleRequestURL, JsonMapper, main); err != nil {
+	if err := RequestUrlToStruct(sampleUrl, &main); err != nil {
 		t.Errorf("deserialization Error %v", err)
 	} else {
 		fmt.Println("func RequestUrlToStruct OK!")
 	}
+
+	//fmt.Println(string(UnsafeAnythingToJSON(main)))
 }

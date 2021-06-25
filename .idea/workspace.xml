@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/utils/internalUtils.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils_test.go" afterDir="false" />
@@ -70,6 +71,17 @@
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
+    <configuration name="TestRequestUrlToStruct in utils_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="T4uLabs" />
+      <working_directory value="$PROJECT_DIR$/utils" />
+      <kind value="FILE" />
+      <package value="utilities" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/utils/utils_test.go" />
+      <framework value="gotest" />
+      <pattern value="^\QTestRequestUrlToStruct\E$" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="t4ulabsutils" />
       <working_directory value="$PROJECT_DIR$" />
@@ -81,6 +93,11 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.TestRequestUrlToStruct in utils_test.go" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
