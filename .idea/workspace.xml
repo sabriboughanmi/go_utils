@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/adNetworks/admob/admobgo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adNetworks/admob/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -50,6 +52,7 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Go Projects\go_utils\adNetworks\admob" />
       <recent name="C:\Go Projects\go_utils\utils" />
       <recent name="C:\Go Projects\T4uLabs" />
       <recent name="C:\Go Projects\T4uLabs\utils" />
