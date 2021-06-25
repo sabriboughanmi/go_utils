@@ -27,7 +27,7 @@ func TestRequestUrlToStruct(t *testing.T) {
 
 	var main Main
 
-	if err := RequestUrlToStruct(sampleRequestURL, JsonMapper, &main); err != nil {
+	if err := RequestUrlToStruct(sampleRequestURL, JsonMapper, main); err != nil {
 		t.Errorf("deserialization Error %v", err)
 	} else {
 		fmt.Println("func RequestUrlToStruct OK!")
