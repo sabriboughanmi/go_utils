@@ -7,4 +7,8 @@ type StructMapperKey string
 
 const (
 	JsonMapper StructMapperKey = "json"
+
+
+	omitemptyKey = "omitempty"
 )
+

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType interface{}, mapperKey StructMapperKey, outPutMap *map[string]interface{}) error {
@@ -18,11 +19,33 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 
 		kind := field.Type.Kind()
 
+		keysFound := strings.Split(key, ",")
+
+		var val interface{}
+		var keyFound = false
+
+		omitempty := false
 		// Get the value from query params with given key
-		val, ok := anything[key]
-		if !ok{
+		for _, k := range keysFound {
+			val, keyFound = anything[k]
+			if keyFound {
+				key = k
+				break
+			}
+			if k == omitemptyKey {
+				omitempty = true
+			}
+		}
+
+		//not key matching this field inside the query
+		if !keyFound {
+			//This field has to be declared
+			if !omitempty {
+				return fmt.Errorf("Key not Found : %s\n", key)
+			}
 			continue
 		}
+
 		switch kind {
 
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
