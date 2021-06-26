@@ -23,7 +23,7 @@ func TestRequestUrlToStruct(t *testing.T) {
 	type ENUM int
 	type Main struct {
 		Int          ENUM        `json:"int"`
-		InvalidKey   string      `json:"InvalidKey,omitempty"`
+		InvalidKey   string      `json:"InvalidKeyExample,omitempty"`
 		Float        float64     `json:"float"`
 		Bool         bool        `json:"bool"`
 		String       string      `json:"string"`
@@ -37,7 +37,7 @@ func TestRequestUrlToStruct(t *testing.T) {
 	var main Main
 
 	if err := RequestUrlToStruct(sampleUrl, &main, JsonMapper); err != nil {
-		t.Errorf("deserialization Error %v", err)
+		t.Errorf("Error - %v", err)
 	} else {
 		fmt.Println("func RequestUrlToStruct OK!")
 	}

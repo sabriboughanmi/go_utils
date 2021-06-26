@@ -22,6 +22,8 @@ func InterfaceAs(inter interface{}, myType interface{}) error {
 }
 
 // RequestUrlToStruct converts a request string url to the specified struct.
+//
+//TODO: optimization required!
 func RequestUrlToStruct(urlRequest string, out interface{}, jsonMappingKey StructMapperKey) error {
 	mapQuery, err := qs.Unmarshal(urlRequest)
 
