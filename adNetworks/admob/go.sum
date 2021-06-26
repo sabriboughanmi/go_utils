@@ -6,8 +6,8 @@ github.com/hiyali/go-lib-ssv v0.0.2 h1:CUS+L5wkYG3kLR2zmcG8MbWZjZSViHwgZ+9FZACkz
 github.com/hiyali/go-lib-ssv v0.0.2/go.mod h1:oBWGoZsxZckxBKmOVZLmveKOveC3mY8TjIyv3ORy7qw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/sabriboughanmi/go_utils/utils v0.0.0-20210626115905-7fa43d1b59ce h1:giF90kYXV6kDvFt1oNOLk9T/qiSDxZFN39dJFBaO8VE=
-github.com/sabriboughanmi/go_utils/utils v0.0.0-20210626115905-7fa43d1b59ce/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
+github.com/sabriboughanmi/go_utils/utils v0.0.0-20210626122133-a9a758cd9d72 h1:p+rnLty5MzO9DQ8He3FO6AMjzp6lQ5y6WI7e30ktQnw=
+github.com/sabriboughanmi/go_utils/utils v0.0.0-20210626122133-a9a758cd9d72/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
