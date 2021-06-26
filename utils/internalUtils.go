@@ -30,6 +30,7 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 			}
 			(*outPutMap)[key] = intVal
 			break
+
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			intVal, err := strconv.ParseUint(val.(string), 10, 64)
 			if err != nil {
@@ -44,13 +45,16 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 				return err
 			}
 			(*outPutMap)[key] = floatVal
-
 			break
 
 		case reflect.String:
-
 			(*outPutMap)[key] = val.(string)
 			break
+
+		case reflect.Interface:
+			(*outPutMap)[key] = val
+			break
+
 		case reflect.Bool:
 			valBool, err := strconv.ParseBool(val.(string))
 			if err != nil {
@@ -58,6 +62,7 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 			}
 			(*outPutMap)[key] = valBool
 			break
+
 		case reflect.Struct:
 			defaultStructVal := reflect.New(field.Type)
 			bytes, err := json.Marshal(val)
@@ -78,7 +83,6 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 			break
 
 		case reflect.Slice:
-
 			bytes, err := json.Marshal(val)
 			if err != nil {
 				return err
@@ -102,7 +106,7 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 
 			}
 
- 			var newOutput = make([]interface{}, len(newEntry))
+			var newOutput = make([]interface{}, len(newEntry))
 			if err = arrayInterfaceToModel(newEntry, &newOutput, mapperKey, field.Type); err != nil {
 				return err
 			}
@@ -129,6 +133,7 @@ func arrayInterfaceToModel(anything []interface{}, outPtrArray *[]interface{}, m
 
 	for i, val := range anything {
 		switch elemKind {
+
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			intVal, err := strconv.ParseInt(val.(string), 10, 64)
 			if err != nil {
@@ -136,6 +141,7 @@ func arrayInterfaceToModel(anything []interface{}, outPtrArray *[]interface{}, m
 			}
 			(*outPtrArray)[i] = intVal
 			break
+
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			intVal, err := strconv.ParseUint(val.(string), 10, 64)
 			if err != nil {
@@ -156,6 +162,10 @@ func arrayInterfaceToModel(anything []interface{}, outPtrArray *[]interface{}, m
 			(*outPtrArray)[i] = val.(string)
 			break
 
+		case reflect.Interface:
+			(*outPtrArray)[i] = val
+			break
+
 		case reflect.Bool:
 			valBool, err := strconv.ParseBool(val.(string))
 			if err != nil {
@@ -163,6 +173,7 @@ func arrayInterfaceToModel(anything []interface{}, outPtrArray *[]interface{}, m
 			}
 			(*outPtrArray)[i] = valBool
 			break
+
 		case reflect.Struct:
 			defaultStructVal := reflect.New(elemType)
 			bytes, err := json.Marshal(val)
