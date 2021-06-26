@@ -2,7 +2,6 @@ package admob
 
 import (
 	"fmt"
-	"github.com/sabriboughanmi/go_utils/utils"
 	"net/url"
 	"testing"
 )
@@ -24,47 +23,59 @@ func TestGetParameters(t *testing.T) {
 		t.Errorf("Error Getting Parameters from url - %v", err)
 		return
 	}
-
+	var missingFieldsFound = false
 	if ssvCallback.AdNetwork == "" {
 		t.Errorf("Missing AdNetwork Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.AdUnit == 0 {
 		t.Errorf("Missing AdUnit Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.CustomData == "" {
 		t.Errorf("Missing CustomData Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.RewardAmount == 0 {
 		t.Errorf("Missing RewardAmount Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.RewardItem == "" {
 		t.Errorf("Missing RewardItem Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.Timestamp == 0 {
 		t.Errorf("Missing Timestamp Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.TransactionID == "" {
 		t.Errorf("Missing TransactionID Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.UserID == "" {
 		t.Errorf("Missing UserID Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.Signature == "" {
 		t.Errorf("Missing Signature Field")
+		missingFieldsFound = true
 	}
 
 	if ssvCallback.KeyID == 0 {
 		t.Errorf("Missing KeyID Field")
+		missingFieldsFound = true
 	}
-
-	fmt.Println(string(utils.UnsafeAnythingToJSON(ssvCallback)))
+	if !missingFieldsFound {
+		fmt.Println("func GetParameters OK!")
+	}
+	//fmt.Println(string(utils.UnsafeAnythingToJSON(ssvCallback)))
 
 }
