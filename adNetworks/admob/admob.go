@@ -15,6 +15,12 @@ func VerifyURL(callBackUrl *url.URL) error {
 //GetParameters Returns the SSVCallback model sent by Admob
 func GetParameters(requestBody string) (SSVCallback, error) {
 	var admobSSVCallback SSVCallback
+
+	/*
+	if strings.Contains(requestBody, "?") {
+		requestBody = requestBody[strings.Index(requestBody, "?"):]
+	}*/
+
 	err := utils.RequestUrlToStruct(requestBody, &admobSSVCallback, utils.JsonMapper)
 	return admobSSVCallback, err
 }
