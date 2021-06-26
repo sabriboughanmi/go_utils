@@ -19,8 +19,10 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 		kind := field.Type.Kind()
 
 		// Get the value from query params with given key
-		val := anything[key]
-
+		val, ok := anything[key]
+		if !ok{
+			continue
+		}
 		switch kind {
 
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
