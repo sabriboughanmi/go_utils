@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adNetworks/admob/admob.go" beforeDir="false" afterPath="$PROJECT_DIR$/adNetworks/admob/admob.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adNetworks/admob/admob_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/adNetworks/admob/admob_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adNetworks/admob/structures.go" beforeDir="false" afterPath="$PROJECT_DIR$/adNetworks/admob/structures.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

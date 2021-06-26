@@ -3,8 +3,9 @@ package admob
 import (
 	"encoding/json"
 	"github.com/hiyali/go-lib-ssv/admob"
-	"github.com/sabriboughanmi/go_utils/utils"
+	utils "github.com/sabriboughanmi/go_utils/utils"
 	"net/url"
+	"strings"
 )
 
 //VerifyURL Verifies Admob CallBack URL Verification.
@@ -16,10 +17,9 @@ func VerifyURL(callBackUrl *url.URL) error {
 func GetParameters(requestBody string) (SSVCallback, error) {
 	var admobSSVCallback SSVCallback
 
-	/*
 	if strings.Contains(requestBody, "?") {
-		requestBody = requestBody[strings.Index(requestBody, "?"):]
-	}*/
+		requestBody = requestBody[strings.Index(requestBody, "?")+1:]
+	}
 
 	err := utils.RequestUrlToStruct(requestBody, &admobSSVCallback, utils.JsonMapper)
 	return admobSSVCallback, err
