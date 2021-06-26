@@ -38,6 +38,4 @@ func TestRequestUrlToStruct(t *testing.T) {
 	} else {
 		fmt.Println("func RequestUrlToStruct OK!")
 	}
-
-	fmt.Println(string(UnsafeAnythingToJSON(main)))
 }
