@@ -21,11 +21,10 @@ type conditionFragment struct {
 	topics           []Topic
 	//Is the Operator applied between Conditions
 	conditionOperator Operator
-
 }
 
-//Condition struct to handle Target Topics
-type Condition struct {
+//ConditionBuilder handles the creation of SAFE Conditions to query devices under specific Topics.
+type ConditionBuilder struct {
 
 	includedTopics []Topic //Used Topics
 	conditionFragments     []conditionFragment
