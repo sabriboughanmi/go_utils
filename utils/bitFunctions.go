@@ -3,6 +3,7 @@ package utils
 const Uint16One uint16 = 1
 const Uint32One uint32 = 1
 const Uint64One uint64 = 1
+const IntOne int = 1
 const ByteOne byte = 1
 
 //////////////////////////////// SetBit \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -22,6 +23,13 @@ func Uint16SetBit(n uint16, index uint) uint16 {
 //Uint32SetBit Sets the bit at pos in the Uint32.
 func Uint32SetBit(n uint32, index uint) uint32 {
 	n |= (Uint32One << index)
+	return n
+}
+
+
+//IntSetBit Sets the bit at pos in the int.
+func IntSetBit(n int, index uint) int {
+	n |= (IntOne << index)
 	return n
 }
 
@@ -54,6 +62,13 @@ func Uint32ClearBit(n uint32, index uint) uint32 {
 	return n
 }
 
+//IntClearBit Clears the bit at pos for a Uint32.
+func IntClearBit(n int, index uint) int {
+	mask := ^(IntOne << index)
+	n &= mask
+	return n
+}
+
 //Uint64ClearBit Clears the bit at pos for a Uint32.
 func Uint64ClearBit(n uint64, index uint) uint64 {
 	mask := ^(Uint64One << index)
@@ -78,6 +93,12 @@ func Uint16IsBitSet(n uint16, index uint) bool {
 //Uint32IsBitSet return true if the bit at index is 1
 func Uint32IsBitSet(n uint32, index uint) bool {
 	val := n & (Uint32One << index)
+	return val > 0
+}
+
+//IntIsBitSet return true if the bit at index is 1
+func IntIsBitSet(n int, index uint) bool {
+	val := n & (IntOne << index)
 	return val > 0
 }
 
