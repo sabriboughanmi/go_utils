@@ -8,12 +8,10 @@ import (
 type Operator string
 
 const (
-	AND Operator = "&&"
-	OR  Operator = "||"
-	none  Operator = ""
+	AND  Operator = "&&"
+	OR   Operator = "||"
+	none Operator = ""
 )
-
-
 
 type conditionFragment struct {
 	//Is the Operator applied between Topics
@@ -25,15 +23,24 @@ type conditionFragment struct {
 
 //ConditionBuilder handles the creation of SAFE Conditions to query devices under specific Topics.
 type ConditionBuilder struct {
-
-	includedTopics []Topic //Used Topics
-	conditionFragments     []conditionFragment
+	includedTopics     []Topic //Used Topics
+	conditionFragments []conditionFragment
 
 	hasChanges bool
-	condition string
+	condition  string
 }
 
 type NotificationManager struct {
 	client *messaging.Client
 	ctx    context.Context
+}
+
+//NotificationData Used to represents a notification all platforms config
+type NotificationData struct {
+	Title, Body, Url string
+	Data             map[string]string
+	AndroidConfig    *messaging.AndroidConfig
+	WebPush          *messaging.WebpushConfig
+	APNS             *messaging.APNSConfig
+	FCMOptions       *messaging.FCMOptions
 }

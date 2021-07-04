@@ -16,15 +16,18 @@ func GetNotificationManager(app *firebase.App, ctx context.Context) (Notificatio
 }
 
 //UsersSendNotification Sends the same Notification to Multiple Users.
-func (nm *NotificationManager) UsersSendNotification(title, body, url string, data map[string]string, registrationTokens ...string) (*messaging.BatchResponse, error) {
+func (nm *NotificationManager) UsersSendNotification(notificationData NotificationData, registrationTokens ...string) (*messaging.BatchResponse, error) {
 	messages := &messaging.MulticastMessage{
 		Tokens: registrationTokens,
-		Data:   data,
+		Data:   notificationData.Data,
 		Notification: &messaging.Notification{
-			Title:    title,
-			Body:     body,
-			ImageURL: url,
+			Title:    notificationData.Title,
+			Body:     notificationData.Body,
+			ImageURL: notificationData.Url,
 		},
+		Android:    notificationData.AndroidConfig,
+		Webpush:    notificationData.WebPush,
+		APNS:       notificationData.APNS,
 	}
 	// Send a message to the device corresponding to the provided registration token.
 	return nm.client.SendMulticast(nm.ctx, messages)
@@ -41,17 +44,21 @@ func (nm *NotificationManager) UsersSendMessage(data map[string]string, registra
 }
 
 //UserSendNotification Sends a Notification to a single User.
-func (nm *NotificationManager) UserSendNotification(title, body, url string, data map[string]string, registrationToken string) (string, error) {
+func (nm *NotificationManager) UserSendNotification(notificationData NotificationData, registrationToken string) (string, error) {
 
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
-		Data: data,
+		Data: notificationData.Data,
 		Notification: &messaging.Notification{
-			Title:    title,
-			Body:     body,
-			ImageURL: url,
+			Title:    notificationData.Title,
+			Body:     notificationData.Body,
+			ImageURL: notificationData.Url,
 		},
-		Token: registrationToken,
+		Android:    notificationData.AndroidConfig,
+		Webpush:    notificationData.WebPush,
+		APNS:       notificationData.APNS,
+		FCMOptions: notificationData.FCMOptions,
+		Token:      registrationToken,
 	}
 
 	// Send message
@@ -73,15 +80,19 @@ func (nm *NotificationManager) UserSendMessage(data map[string]string, registrat
 //ConditionSendNotification Sends a Message to all devices for which the Condition returns True.
 //
 //NOTE! using a raw string as a condition is not safe, it is safer to use the ConditionBuilder.
-func (nm *NotificationManager) ConditionSendNotification(title, body, url string, data map[string]string, condition string) (string, error) {
+func (nm *NotificationManager) ConditionSendNotification(notificationData NotificationData, condition string) (string, error) {
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
-		Data: data,
+		Data: notificationData.Data,
 		Notification: &messaging.Notification{
-			Title:    title,
-			Body:     body,
-			ImageURL: url,
+			Title:    notificationData.Title,
+			Body:     notificationData.Body,
+			ImageURL: notificationData.Url,
 		},
+		Android:    notificationData.AndroidConfig,
+		Webpush:    notificationData.WebPush,
+		APNS:       notificationData.APNS,
+		FCMOptions: notificationData.FCMOptions,
 		Condition: condition,
 	}
 	// Send message
@@ -98,7 +109,6 @@ func (nm *NotificationManager) TopicSendMessage(data map[string]string, topic st
 	// Send message
 	return nm.client.Send(nm.ctx, message)
 }
-
 
 //TopicSubscribe Subscribes User/Users to a given Topic.
 func (nm *NotificationManager) TopicSubscribe(topic string, registrationToken ...string) (*messaging.TopicManagementResponse, error) {
