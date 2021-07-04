@@ -37,10 +37,10 @@ type NotificationManager struct {
 
 //NotificationData Used to represents a notification all platforms config
 type NotificationData struct {
-	Title, Body, Url string
-	Data             map[string]string
-	AndroidConfig    *messaging.AndroidConfig
-	WebPush          *messaging.WebpushConfig
-	APNS             *messaging.APNSConfig
-	FCMOptions       *messaging.FCMOptions
+	Notification  *messaging.Notification
+	Data          map[string]string
+	AndroidConfig *messaging.AndroidConfig
+	WebPush       *messaging.WebpushConfig
+	APNS          *messaging.APNSConfig
+	FCMOptions    *messaging.FCMOptions
 }

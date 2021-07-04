@@ -18,16 +18,12 @@ func GetNotificationManager(app *firebase.App, ctx context.Context) (Notificatio
 //UsersSendNotification Sends the same Notification to Multiple Users.
 func (nm *NotificationManager) UsersSendNotification(notificationData NotificationData, registrationTokens ...string) (*messaging.BatchResponse, error) {
 	messages := &messaging.MulticastMessage{
-		Tokens: registrationTokens,
-		Data:   notificationData.Data,
-		Notification: &messaging.Notification{
-			Title:    notificationData.Title,
-			Body:     notificationData.Body,
-			ImageURL: notificationData.Url,
-		},
-		Android:    notificationData.AndroidConfig,
-		Webpush:    notificationData.WebPush,
-		APNS:       notificationData.APNS,
+		Tokens:       registrationTokens,
+		Data:         notificationData.Data,
+		Notification: notificationData.Notification,
+		Android:      notificationData.AndroidConfig,
+		Webpush:      notificationData.WebPush,
+		APNS:         notificationData.APNS,
 	}
 	// Send a message to the device corresponding to the provided registration token.
 	return nm.client.SendMulticast(nm.ctx, messages)
@@ -49,11 +45,7 @@ func (nm *NotificationManager) UserSendNotification(notificationData Notificatio
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
 		Data: notificationData.Data,
-		Notification: &messaging.Notification{
-			Title:    notificationData.Title,
-			Body:     notificationData.Body,
-			ImageURL: notificationData.Url,
-		},
+		Notification: notificationData.Notification,
 		Android:    notificationData.AndroidConfig,
 		Webpush:    notificationData.WebPush,
 		APNS:       notificationData.APNS,
@@ -84,16 +76,12 @@ func (nm *NotificationManager) ConditionSendNotification(notificationData Notifi
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
 		Data: notificationData.Data,
-		Notification: &messaging.Notification{
-			Title:    notificationData.Title,
-			Body:     notificationData.Body,
-			ImageURL: notificationData.Url,
-		},
+		Notification: notificationData.Notification,
 		Android:    notificationData.AndroidConfig,
 		Webpush:    notificationData.WebPush,
 		APNS:       notificationData.APNS,
 		FCMOptions: notificationData.FCMOptions,
-		Condition: condition,
+		Condition:  condition,
 	}
 	// Send message
 	return nm.client.Send(nm.ctx, message)
