@@ -152,28 +152,28 @@ func RemoveFile(bucket, name string, client *storage.Client, ctx context.Context
 	return nil
 }
 
-// RemoveFile Removes a file from Storage
-func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket string, names ...string) error {
+// RemoveFilesFromBucket Removes  a list of files from Storage
+func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket string, paths ...string) error {
 	bucketHandle := client.Bucket(bucket)
 
 	wg := sync.WaitGroup{}
 	errChan := make(chan error)
 
-	for _, storagePath := range names {
+	for _, storagePath := range paths {
 		wg.Add(1)
-		go func(errorChan chan error, waitGroup *sync.WaitGroup) {
+		go func(errorChan chan error, waitGroup *sync.WaitGroup, path string) {
 			defer waitGroup.Done()
-			objHandle := bucketHandle.Object(storagePath)
+			objHandle := bucketHandle.Object(path)
 			if err := objHandle.Delete(ctx); err != nil {
 				if err == storage.ErrObjectNotExist {
-					fmt.Printf("Error Skipped: trying to Remove an unexisting File: %s \n", storagePath)
+					fmt.Printf("Error Skipped: trying to Remove an unexisting File: %s \n", path)
 					return
 				}
 
-				errorChan <- fmt.Errorf("Object(%s).Delete: %v", storagePath, err)
+				errorChan <- fmt.Errorf("Object(%s).Delete: %v", path, err)
 				return
 			}
-		}(errChan, &wg)
+		}(errChan, &wg, storagePath)
 	}
 
 	//Wait Removing Errors
