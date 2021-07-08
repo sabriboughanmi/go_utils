@@ -166,10 +166,9 @@ func RemoveFilesFromBucket(client *storage.Client, ctx context.Context, bucket s
 			objHandle := bucketHandle.Object(path)
 			if err := objHandle.Delete(ctx); err != nil {
 				if err == storage.ErrObjectNotExist {
-					fmt.Printf("Error Skipped: trying to Remove an unexisting File: %s \n", path)
+					fmt.Printf("Error Skipped: trying to Remove an unexisting File: %s - Error : %v \n", path, err)
 					return
 				}
-
 				errorChan <- fmt.Errorf("Object(%s).Delete: %v", path, err)
 				return
 			}
