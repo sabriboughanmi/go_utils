@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
 	"google.golang.org/api/iterator"
@@ -8,8 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-
-	"cloud.google.com/go/storage"
 )
 
 //StorageFileContentType represents a file Content type in Cloud Storage in order to be recognized by the browser
@@ -251,3 +250,18 @@ func FilesInFolder(bucket, prefix, delimiter string, client *storage.Client, ctx
 	}
 	return &files, nil
 }
+
+// RenameFile rename storage file.
+func RenameFile(srcBucket, srcName, dstName string, client *storage.Client, ctx context.Context) error {
+	src := client.Bucket(srcBucket).Object(srcName)
+	dst := client.Bucket(srcBucket).Object(dstName)
+
+	if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
+		return fmt.Errorf("Object(%q).CopierFrom(%q).Run: %v", dstName, srcName, err)
+	}
+	if err := src.Delete(ctx); err != nil {
+		return fmt.Errorf("Object(%q).Delete: %v", srcName, err)
+	}
+	return nil
+}
+
