@@ -103,6 +103,7 @@ func (wb *storageBatch) Delete(srcBucket string, name string) {
 	})
 }
 
+//Commit schedule batched operations in goroutines
 func (wb *storageBatch) Commit(ctx context.Context) error {
 	errorChannel := make(chan error, len(*wb.operations))
 	var wg sync.WaitGroup
