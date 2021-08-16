@@ -57,6 +57,7 @@ func Batch(storageClient *storage.Client) *storageBatch {
 	return &storageBatch{client: storageClient}
 }
 
+//Add appends a storage file creation from local to the batch.
 func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fileMetaData map[string]string) {
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageAddType,
@@ -69,6 +70,7 @@ func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fi
 	})
 }
 
+//Rename appends a Rename file operation to the batch.
 func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string) {
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageRenameType,
@@ -81,6 +83,7 @@ func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string)
 	})
 }
 
+//Move appends a move file operation to the batch.
 func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string, dstName string) {
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageMoveType,
@@ -93,6 +96,7 @@ func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string,
 	})
 }
 
+//Delete is used to append an operation in which we can delete a specific file
 func (wb *storageBatch) Delete(srcBucket string, name string) {
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageDeleteType,
@@ -103,7 +107,7 @@ func (wb *storageBatch) Delete(srcBucket string, name string) {
 	})
 }
 
-//Commit schedule batched operations in goroutines
+//Commit schedules batched operations in separate goroutines
 func (wb *storageBatch) Commit(ctx context.Context) error {
 	errorChannel := make(chan error, len(*wb.operations))
 	var wg sync.WaitGroup
