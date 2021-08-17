@@ -156,6 +156,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 			break
 		case storageAddType:
 			metadata, _ := operation.MetaData.(addOperationMetaData)
+			wg.Add(1)
 			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
 				defer wg.Done()
 				if err := CreateStorageFileFromLocal(metadata.bucket, metadata.fileName, metadata.localPath, metadata.fileMetaData, wb.client, ctx); err != nil {
