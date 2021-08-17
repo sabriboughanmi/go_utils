@@ -49,23 +49,17 @@ type moveOperationMetaData struct {
 
 type storageBatch struct {
 	client     *storage.Client
-	operations *[]operation
+	operations []operation
 }
 
 // Batch returns a storageBatch.
-func Batch(storageClient *storage.Client) *storageBatch {
-	return &storageBatch{client: storageClient}
+func Batch(storageClient *storage.Client) storageBatch {
+	return storageBatch{client: storageClient}
 }
 
 //Add appends a storage file creation from local to the batch.
 func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fileMetaData map[string]string) {
-
-	if wb.operations == nil {
-		operations := make([]operation, 1)
-		wb.operations = &operations
-	}
-
-	*wb.operations = append(*wb.operations, operation{
+	wb.operations = append(wb.operations, operation{
 		ActionType: storageAddType,
 		MetaData: addOperationMetaData{
 			bucket:       bucket,
@@ -78,11 +72,7 @@ func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fi
 
 //Rename appends a Rename file operation to the batch.
 func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string) {
-	if wb.operations == nil {
-		operations := make([]operation, 1)
-		wb.operations = &operations
-	}
-	*wb.operations = append(*wb.operations, operation{
+	wb.operations = append(wb.operations, operation{
 		ActionType: storageRenameType,
 		MetaData: renameOperationMetaData{
 			srcBucket: srcBucket,
@@ -95,11 +85,7 @@ func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string)
 
 //Move appends a move file operation to the batch.
 func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string, dstName string) {
-	if wb.operations == nil {
-		operations := make([]operation, 1)
-		wb.operations = &operations
-	}
-	*wb.operations = append(*wb.operations, operation{
+	wb.operations = append(wb.operations, operation{
 		ActionType: storageMoveType,
 		MetaData: moveOperationMetaData{
 			srcBucket: srcBucket,
@@ -112,11 +98,7 @@ func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string,
 
 //Delete is used to append an operation in which we can delete a specific file
 func (wb *storageBatch) Delete(srcBucket string, name string) {
-	if wb.operations == nil {
-		operations := make([]operation, 1)
-		wb.operations = &operations
-	}
-	*wb.operations = append(*wb.operations, operation{
+	wb.operations = append(wb.operations, operation{
 		ActionType: storageDeleteType,
 		MetaData: deleteOperationMetaData{
 			bucket: srcBucket,
@@ -128,13 +110,13 @@ func (wb *storageBatch) Delete(srcBucket string, name string) {
 //Commit schedules batched operations in separate goroutines
 func (wb *storageBatch) Commit(ctx context.Context) error {
 	//Prevent calling goroutines if no operations are cached.
-	if wb.operations == nil || len(*wb.operations) == 0 {
+	if wb.operations == nil || len(wb.operations) == 0 {
 		return nil
 	}
 
-	errorChannel := make(chan error, len(*wb.operations))
+	errorChannel := make(chan error, len(wb.operations))
 	var wg sync.WaitGroup
-	for _, operation := range *wb.operations {
+	for _, operation := range wb.operations {
 		switch operation.ActionType {
 		case storageDeleteType:
 			metadata, _ := operation.MetaData.(deleteOperationMetaData)
