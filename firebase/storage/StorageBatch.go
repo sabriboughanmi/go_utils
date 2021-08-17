@@ -59,6 +59,12 @@ func Batch(storageClient *storage.Client) *storageBatch {
 
 //Add appends a storage file creation from local to the batch.
 func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fileMetaData map[string]string) {
+
+	if wb.operations == nil {
+		operations := make([]operation, 1)
+		wb.operations = &operations
+	}
+
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageAddType,
 		MetaData: addOperationMetaData{
@@ -72,6 +78,10 @@ func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fi
 
 //Rename appends a Rename file operation to the batch.
 func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string) {
+	if wb.operations == nil {
+		operations := make([]operation, 1)
+		wb.operations = &operations
+	}
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageRenameType,
 		MetaData: renameOperationMetaData{
@@ -85,6 +95,10 @@ func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string)
 
 //Move appends a move file operation to the batch.
 func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string, dstName string) {
+	if wb.operations == nil {
+		operations := make([]operation, 1)
+		wb.operations = &operations
+	}
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageMoveType,
 		MetaData: moveOperationMetaData{
@@ -98,6 +112,10 @@ func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string,
 
 //Delete is used to append an operation in which we can delete a specific file
 func (wb *storageBatch) Delete(srcBucket string, name string) {
+	if wb.operations == nil {
+		operations := make([]operation, 1)
+		wb.operations = &operations
+	}
 	*wb.operations = append(*wb.operations, operation{
 		ActionType: storageDeleteType,
 		MetaData: deleteOperationMetaData{
