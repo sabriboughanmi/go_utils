@@ -109,6 +109,11 @@ func (wb *storageBatch) Delete(srcBucket string, name string) {
 
 //Commit schedules batched operations in separate goroutines
 func (wb *storageBatch) Commit(ctx context.Context) error {
+	//Prevent calling goroutines if no operations are cached.
+	if wb.operations == nil || len(*wb.operations) == 0 {
+		return nil
+	}
+
 	errorChannel := make(chan error, len(*wb.operations))
 	var wg sync.WaitGroup
 	for _, operation := range *wb.operations {
