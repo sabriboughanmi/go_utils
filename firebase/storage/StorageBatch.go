@@ -135,7 +135,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 			wg.Add(1)
 			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
 				defer wg.Done()
-				if err := RenameFile(metadata.srcBucket, metadata.dstName, metadata.srcName, wb.client, ctx); err != nil {
+				if err := RenameFile(metadata.srcBucket, metadata.srcName, metadata.dstName, wb.client, ctx); err != nil {
 					errorChan <- err
 					return
 				}

@@ -257,11 +257,10 @@ func RenameFile(srcBucket, srcName, dstName string, client *storage.Client, ctx 
 	dst := client.Bucket(srcBucket).Object(dstName)
 
 	if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
-		return fmt.Errorf("Object(%q).CopierFrom(%q).Run: %v", dstName, srcName, err)
+		return fmt.Errorf("Object(%s).CopierFrom(%s).Run: %v", dstName, srcName, err)
 	}
 	if err := src.Delete(ctx); err != nil {
-		return fmt.Errorf("Object(%q).Delete: %v", srcName, err)
+		return fmt.Errorf("Object(%s).Delete: %v", srcName, err)
 	}
 	return nil
 }
-
