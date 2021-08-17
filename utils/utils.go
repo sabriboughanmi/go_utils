@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/derekstavis/go-qs"
-	"strings"
 )
 
 /*
@@ -41,15 +40,4 @@ func RequestUrlToStruct(urlRequest string, out interface{}, jsonMappingKey Struc
 	}
 
 	return json.Unmarshal(bytes, out)
-}
-
-//ValidateEmail checks if an email address is in valid format
-func ValidateEmail(email string) error {
-	if email == "" {
-		return fmt.Errorf("email must be a non-empty string")
-	}
-	if parts := strings.Split(email, "@"); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return fmt.Errorf("malformed email string: %q", email)
-	}
-	return nil
 }
