@@ -128,7 +128,6 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 					return
 				}
 			}(&wg, errorChannel)
-
 			break
 		case storageRenameType:
 			metadata, _ := operation.MetaData.(renameOperationMetaData)
@@ -140,7 +139,6 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 					return
 				}
 			}(&wg, errorChannel)
-
 			break
 		case storageMoveType:
 			metadata, _ := operation.MetaData.(moveOperationMetaData)
@@ -152,7 +150,6 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 					return
 				}
 			}(&wg, errorChannel)
-
 			break
 		case storageAddType:
 			metadata, _ := operation.MetaData.(addOperationMetaData)
@@ -163,9 +160,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 					errorChan <- err
 					return
 				}
-
 			}(&wg, errorChannel)
-
 			break
 		}
 	}
@@ -175,11 +170,8 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 		//select
 		for {
 			select {
-			case x, closed := <-errorChannel:
-				if closed {
-					return
-				}
-				receivedErrors = append(receivedErrors, x.Error())
+			case err := <-errorChannel:
+				receivedErrors = append(receivedErrors, err.Error())
 				break
 			default:
 				return
@@ -187,6 +179,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 			}
 		}
 	}()
+
 	if len(receivedErrors) > 0 {
 		return fmt.Errorf("Got %d Errors while commit - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))
 	}

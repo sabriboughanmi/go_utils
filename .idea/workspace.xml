@@ -5,9 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/firebase/storage/storage_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils_internal_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/firebase/storage/go.mod" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/firebase/storage/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +67,7 @@
       <recent name="C:\Go Projects\T4uLabs\utils\common" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestVerifyURL in admob_test.go">
+  <component name="RunManager" selected="Go Test.TestMoveFile in go_utils">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="t4ulabsutils" />
       <working_directory value="$PROJECT_DIR$" />
@@ -73,6 +76,17 @@
       <package value="utilities" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestMoveFile in go_utils" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="T4uLabs" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="go_utils" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestMoveFile\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestRequestUrlToStruct in utils_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -110,6 +124,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestMoveFile in go_utils" />
         <item itemvalue="Go Test.TestVerifyURL in admob_test.go" />
         <item itemvalue="Go Test.TestRequestUrlToStruct in utils_test.go" />
       </list>
