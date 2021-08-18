@@ -5,8 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/storage_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/storage_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils_internal_test.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
