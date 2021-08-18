@@ -15,4 +15,4 @@
 # vendor/
 
 #Private data
-/private_data/serviceAccountKey.json
+/private_data/*.*
