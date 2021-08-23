@@ -56,7 +56,7 @@ func TestMoveFile(t *testing.T) {
 	storageBatch := Batch(storageClient)
 
 	storageBatch.Move(srcBucket, dstBucket, srcStoragePath, dstStoragePath, func(err error) {
-		fmt.Printf("Eh Eh eni n9oul fama erreer %v", err)
+		fmt.Printf("moving file error %v", err)
 	})
 
 	if err = storageBatch.Commit(ctx); err != nil {
