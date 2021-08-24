@@ -87,17 +87,13 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 }
 
 // ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef) error {
-	errorChannel := make(chan error, int(v.duration))
+func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef  ) error {
+	errorChannel := make(chan error)
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
 
-	client, err := Vision.NewImageAnnotatorClient(ctx)
-	if err != nil {
-		return fmt.Errorf("NewImageAnnotatorClient : , Error:  %v", err)
-	}
 
 	for {
 		wg.Add(1)
@@ -116,11 +112,11 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 			if err := v.GetThumbnailAtSec(path, duration); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
-
+			/*
 			if _, err := ModerateVideoFrame(path, ctx, tolerance, client, tempStorageObject); err != nil {
 				errorChan <- err
 				return
-			}
+			}*/
 
 		}(&wg, errorChannel)
 
