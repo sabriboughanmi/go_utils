@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -87,13 +88,12 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 }
 
 // ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef  ) error {
+func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) error {
 	errorChannel := make(chan error)
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
-
 
 	for {
 		wg.Add(1)
@@ -109,14 +109,14 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 			}
 			defer os.Remove(path)
 
-			if err := v.GetThumbnailAtSec(path, duration); err != nil {
+			if err = v.GetThumbnailAtSec(path, duration); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
-			/*
-			if _, err := ModerateVideoFrame(path, ctx, tolerance, client, tempStorageObject); err != nil {
+
+			if _, err = ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject); err != nil {
 				errorChan <- err
 				return
-			}*/
+			}
 
 		}(&wg, errorChannel)
 
@@ -147,26 +147,39 @@ func GetTemporaryStorageObjectRef(client *storage.Client, bucket string) tempora
 
 // ModerateVideoFrame verify if an extended frame contain forbidden content
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
-	storageFileURI := tempStorageObject.Bucket + localPath
+
+	storagePath := localPath[strings.Index(localPath, "\\"):]
+
 	// create image in  storage
-	if err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, localPath, localPath, nil, tempStorageObject.Client, ctx); err != nil {
+	objectHandle,err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
+	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
+	fmt.Println("object name"+ objectHandle.ObjectName())
+
 	// remove image
 	defer func() {
-		if err := storageUtils.RemoveFile(tempStorageObject.Bucket, localPath, tempStorageObject.Client, ctx); err != nil {
+		if err := storageUtils.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
 			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
 			return
 		}
 	}()
 
-	image := Vision.NewImageFromURI(storageFileURI)
 
+	storageFileFullUrl := fmt.Sprintf("gs:\\\\%s%s", tempStorageObject.Bucket, storagePath)
+
+	fmt.Printf("storageFileFullUrl %s \n", storageFileFullUrl)
+	image := Vision.NewImageFromURI(storageFileFullUrl)
+
+	fmt.Printf("DetectSafeSearch1")
 	props, err := client.DetectSafeSearch(ctx, image, nil)
 	if err != nil {
-		return false, fmt.Errorf("DetectSafeSearch : , Error:  %v", err)
+		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
 	}
+
+	fmt.Printf("DetectSafeSearch2")
 	var tolr = protoreflect.EnumNumber(tolerance)
+	fmt.Println("tolerance")
 
 	if props.Adult.Number() > tolr || props.Violence.Number() > tolr {
 		return false, errors.New("frame contain forbidden content")

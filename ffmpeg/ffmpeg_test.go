@@ -2,6 +2,7 @@ package ffmpeg
 
 import (
 	"cloud.google.com/go/storage"
+	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"google.golang.org/api/option"
 	"sync"
@@ -26,6 +27,7 @@ func GetStorageClient() (*storage.Client, error) {
 	})
 	return StorageClient, err
 }
+
 func TestModerateVideo(t *testing.T) {
 
 	storageClient, err := GetStorageClient()
@@ -33,12 +35,18 @@ func TestModerateVideo(t *testing.T) {
 		t.Errorf("Error - %v", err)
 	}
 
-	var temporaryStorageObject =  GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
-	vid , err :=  LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
-	if  err != nil{
+	var temporaryStorageObject = GetTemporaryStorageObjectRef(storageClient, "tested4you-dev.appspot.com")
+	vid, err := LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
+	if err != nil {
 		t.Errorf("Error load video  - %v", err)
 	}
-		err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil {
+
+	opt := option.WithCredentialsFile("./../private_data/serviceAccountKey.json")
+	// Pre-declare an err variable to avoid shadowing client.
+	AnnotationClient, err := vision.NewImageAnnotatorClient(ctx, opt)
+
+	err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
+	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
 }
