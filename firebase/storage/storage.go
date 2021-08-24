@@ -209,7 +209,7 @@ func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData
 	var objectHandle = client.Bucket(bucket).Object(fileName)
 	wc := objectHandle.NewWriter(ctx)
 	defer wc.Close()
-
+//defer 
 	if fileMetaData != nil {
 		wc.Metadata = fileMetaData
 	} else {
@@ -219,7 +219,7 @@ func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData
 	if _, err := wc.Write(data); err != nil {
 		return nil, fmt.Errorf("CreateStorageFileFromLocal: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
 	}
-	return objectHandle,nil
+	return objectHandle, nil
 }
 
 //FilesInFolder Lists all Files under a folder prefix.
