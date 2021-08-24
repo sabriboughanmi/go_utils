@@ -103,8 +103,6 @@ func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string,
 			srcName:   srcName,
 			dstName:   dstName,
 			onFailure: onFailure,
-
-
 		},
 	})
 }
