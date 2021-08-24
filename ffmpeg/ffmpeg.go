@@ -2,13 +2,13 @@ package ffmpeg
 
 import (
 	"bytes"
-	"cloud.google.com/go/storage"
+	st "cloud.google.com/go/storage"
 	Vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	storageUtils "github.com/sabriboughanmi/go_utils/firebase/storage"
+	storage2 "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
@@ -133,12 +133,12 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 }
 
 type temporaryStorageObjectRef struct {
-	Client *storage.Client
+	Client *st.Client
 	Bucket string
 }
 
 //GetTemporaryStorageObjectRef is used to send necessary data to ModerateVideoFrame
-func GetTemporaryStorageObjectRef(client *storage.Client, bucket string) temporaryStorageObjectRef {
+func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporaryStorageObjectRef {
 	return temporaryStorageObjectRef{
 		Client: client,
 		Bucket: bucket,
@@ -151,7 +151,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 	storagePath := localPath[strings.Index(localPath, "\\"):]
 
 	// create image in  storage
-	objectHandle,err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
+	objectHandle,err :=  storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
@@ -159,7 +159,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 
 	// remove image
 	defer func() {
-		if err := storageUtils.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
+		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
 			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
 			return
 		}
