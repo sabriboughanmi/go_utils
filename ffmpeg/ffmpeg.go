@@ -88,24 +88,25 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 
 // ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef) error {
-	errorChannel := make(chan error, int(v.duration))
+
+	errorChannel := make(chan error)
+
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
 
-	client, err := Vision.NewImageAnnotatorClient(ctx)
+	client, err := Vision.NewImageAnnotatorClient(ctx, )
 	if err != nil {
 		return fmt.Errorf("NewImageAnnotatorClient : , Error:  %v", err)
 	}
-
-	for {
+ 	for {
 		wg.Add(1)
 
 		//moderate frame every x sec
-		go func(waitGroup *sync.WaitGroup, errorChan chan error) {
+		 func(waitGroup *sync.WaitGroup, errorChan chan error) {
 			defer wg.Done()
-			//Done: path = creation temp file
+ 			//Done: path = creation temp file
 			path, err := osUtils.CreateTempFile("pic.png", nil)
 			if err != nil {
 				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
@@ -113,7 +114,7 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 			}
 			defer os.Remove(path)
 
-			if err := v.GetThumbnailAtSec(path, duration); err != nil {
+  			if err := v.GetThumbnailAtSec(path, duration); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
 
@@ -153,7 +154,8 @@ func GetTemporaryStorageObjectRef(client *storage.Client, bucket string) tempora
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
 	storageFileURI := tempStorageObject.Bucket + localPath
 	// create image in  storage
-	if err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, localPath, localPath, nil, tempStorageObject.Client, ctx); err != nil {
+	objecthandle,err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, localPath, localPath, nil, tempStorageObject.Client, ctx);
+	if  err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
 	// remove image

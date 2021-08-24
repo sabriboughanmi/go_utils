@@ -31,14 +31,18 @@ func TestModerateVideo(t *testing.T) {
 	storageClient, err := GetStorageClient()
 	if err != nil {
 		t.Errorf("Error - %v", err)
+		return
 	}
 
-	var temporaryStorageObject =  GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
-	vid , err :=  LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
-	if  err != nil{
+	var temporaryStorageObject = GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
+	vid, err := LoadVideo("C://Users/Sabri/Downloads/vd.mp4")
+	if err != nil {
 		t.Errorf("Error load video  - %v", err)
+		return
 	}
-		err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil {
+
+	if err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject); err != nil {
 		t.Errorf("Error moderate video  - %v", err)
+		return
 	}
 }
