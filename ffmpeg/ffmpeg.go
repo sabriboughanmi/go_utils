@@ -2,14 +2,20 @@ package ffmpeg
 
 import (
 	"bytes"
+	"cloud.google.com/go/storage"
+	Vision "cloud.google.com/go/vision/apiv1"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	storageUtils "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
 	"os/exec"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -51,10 +57,9 @@ func (v *EditableVideo) GetAspectRatio() float32 {
 }
 
 //GetDuration return Video Duration in Seconds
-func (v *Video) GetDuration()float64{
+func (v *Video) GetDuration() float64 {
 	return v.duration.Seconds()
 }
-
 
 // GetThumbnailAtSec Creates a Thumbnail at path for a given time
 func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
@@ -79,6 +84,99 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
 	}
 	return nil
+}
+
+// ModerateVideo verify if a video contain forbidden content
+func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef) error {
+	errorChannel := make(chan error, int(v.duration))
+	var duration, moderateDuration float64
+	moderateDuration = v.GetDuration()
+	var wg sync.WaitGroup
+	duration = 0
+
+	client, err := Vision.NewImageAnnotatorClient(ctx)
+	if err != nil {
+		return fmt.Errorf("NewImageAnnotatorClient : , Error:  %v", err)
+	}
+
+	for {
+		wg.Add(1)
+
+		//moderate frame every x sec
+		go func(waitGroup *sync.WaitGroup, errorChan chan error) {
+			defer wg.Done()
+			//Done: path = creation temp file
+			path, err := osUtils.CreateTempFile("pic.png", nil)
+			if err != nil {
+				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
+				return
+			}
+			defer os.Remove(path)
+
+			if err := v.GetThumbnailAtSec(path, duration); err != nil {
+				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
+			}
+
+			if _, err := ModerateVideoFrame(path, ctx, tolerance, client, tempStorageObject); err != nil {
+				errorChan <- err
+				return
+			}
+
+		}(&wg, errorChannel)
+
+		duration += sequenceDuration
+
+		if duration >= moderateDuration {
+			break
+		}
+	}
+
+	wg.Wait()
+
+	return nil
+}
+
+type temporaryStorageObjectRef struct {
+	Client *storage.Client
+	Bucket string
+}
+
+//GetTemporaryStorageObjectRef is used to send necessary data to ModerateVideoFrame
+func GetTemporaryStorageObjectRef(client *storage.Client, bucket string) temporaryStorageObjectRef {
+	return temporaryStorageObjectRef{
+		Client: client,
+		Bucket: bucket,
+	}
+}
+
+// ModerateVideoFrame verify if an extended frame contain forbidden content
+func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
+	storageFileURI := tempStorageObject.Bucket + localPath
+	// create image in  storage
+	if err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, localPath, localPath, nil, tempStorageObject.Client, ctx); err != nil {
+		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
+	}
+	// remove image
+	defer func() {
+		if err := storageUtils.RemoveFile(tempStorageObject.Bucket, localPath, tempStorageObject.Client, ctx); err != nil {
+			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
+			return
+		}
+	}()
+
+	image := Vision.NewImageFromURI(storageFileURI)
+
+	props, err := client.DetectSafeSearch(ctx, image, nil)
+	if err != nil {
+		return false, fmt.Errorf("DetectSafeSearch : , Error:  %v", err)
+	}
+	var tolr = protoreflect.EnumNumber(tolerance)
+
+	if props.Adult.Number() > tolr || props.Violence.Number() > tolr {
+		return false, errors.New("frame contain forbidden content")
+	}
+
+	return true, nil
 }
 
 // LoadVideo gives you a Video that can be operated on. Load does not open the file
