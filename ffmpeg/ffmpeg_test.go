@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"github.com/sabriboughanmi/go_utils/ffmpeg"
 	"google.golang.org/api/option"
 	"sync"
 	"testing"
@@ -31,14 +32,10 @@ func TestModerateVideo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error - %v", err)
 	}
-	var temporaryStorageObject temporaryStorageObjectRef
-	temporaryStorageObject.Bucket = "gs://tested4you-dev.appspot.com/"
-	temporaryStorageObject.Client = storageClient
-	/*
-		vid, err := ffmpeg.LoadVideo("https://www.youtube.com/watch?v=w01V5FI03MQ")
-		if err != nil {
-				fmt.Printf("error")
-		}
-	*/
 
+	var temporaryStorageObject = ffmpeg.GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
+	vid, err := ffmpeg.LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
+	err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil{
+		t.Errorf("Error moderate video  - %v", err)
+	}
 }
