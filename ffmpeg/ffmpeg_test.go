@@ -33,8 +33,8 @@ func TestModerateVideo(t *testing.T) {
 		t.Errorf("Error - %v", err)
 	}
 
-	var temporaryStorageObject = ffmpeg.GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
-	vid, err := ffmpeg.LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
+	var temporaryStorageObject =  GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
+	vid, err := LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
 	err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil{
 		t.Errorf("Error moderate video  - %v", err)
 	}
