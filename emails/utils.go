@@ -268,6 +268,17 @@ func (ea *EmailAddress) parseSender() (string, error) {
 	return from.Address, nil
 }
 
+//IsValidEmail checks if an email address is in valid format
+func IsValidEmail(email string) error {
+	if email == "" {
+		return fmt.Errorf("email must be a non-empty string")
+	}
+	if parts := strings.Split(email, "@"); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return fmt.Errorf("malformed email string: %q", email)
+	}
+	return nil
+}
+
 
 
 var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
