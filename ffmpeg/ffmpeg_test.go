@@ -28,15 +28,17 @@ func GetStorageClient() (*storage.Client, error) {
 }
 func TestModerateVideo(t *testing.T) {
 
-	if _, err := GetStorageClient() ; err != nil {
+	storageClient, err := GetStorageClient()
+	if err != nil {
 		t.Errorf("Error - %v", err)
 	}
 
-	//var temporaryStorageObject =  GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
-	if _, err :=  LoadVideo("C://Users/T4ULabs/Downloads/vd.mp4");	err != nil{
+	var temporaryStorageObject =  GetTemporaryStorageObjectRef(storageClient, "gs://tested4you-dev.appspot.com/")
+	vid , err :=  LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
+	if  err != nil{
 		t.Errorf("Error load video  - %v", err)
 	}
-		/*err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil{
+		err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject) ;	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
-	}*/
+	}
 }
