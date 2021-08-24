@@ -7,10 +7,16 @@
     <list default="true" id="048dfd6e-bf3e-416c-b586-dd9adad1f6ed" name="Default Changelist" comment="">
 <<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ffmpeg/ffmpeg.go" beforeDir="false" afterPath="$PROJECT_DIR$/ffmpeg/ffmpeg.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" beforeDir="false" afterPath="$PROJECT_DIR$/firebase/storage/StorageBatch.go" afterDir="false" />
+=======
+<<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/emails/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/emails/utils.go" afterDir="false" />
 =======
       <change beforePath="$PROJECT_DIR$/ffmpeg/ffmpeg_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/ffmpeg/ffmpeg_test.go" afterDir="false" />
 >>>>>>> ecd74d3bde158ec751f81fc21c1d68af95d59e8c
+>>>>>>> 7e20bdbff48d7af629aff4d8ee01c72ae45463e1
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

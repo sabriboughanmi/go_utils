@@ -201,13 +201,13 @@ func CreateFile(bucket, fileName string, content []byte, contentType FileContent
 }
 
 // CreateStorageFileFromLocal creates a file in Google Cloud Storage from a Local file Path.
-func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData map[string]string, client *storage.Client, ctx context.Context) error {
+func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData map[string]string, client *storage.Client, ctx context.Context) (*storage.ObjectHandle, error) {
 	data, err := ioutil.ReadFile(localPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	wc := client.Bucket(bucket).Object(fileName).NewWriter(ctx)
+	var objectHandle = client.Bucket(bucket).Object(fileName)
+	wc := objectHandle.NewWriter(ctx)
 	defer wc.Close()
 
 	if fileMetaData != nil {
@@ -217,9 +217,9 @@ func CreateStorageFileFromLocal(bucket, fileName, localPath string, fileMetaData
 	}
 
 	if _, err := wc.Write(data); err != nil {
-		return fmt.Errorf("CreateStorageFileFromLocal: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
+		return nil, fmt.Errorf("CreateStorageFileFromLocal: unable to write data to bucket %q, file %q: %v", bucket, fileName, err)
 	}
-	return nil
+	return objectHandle,nil
 }
 
 //FilesInFolder Lists all Files under a folder prefix.
