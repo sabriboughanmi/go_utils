@@ -151,7 +151,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 	storagePath := localPath[strings.Index(localPath, "\\"):]
 
 	// create image in  storage
-	objectHandle,err :=  storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
+	objectHandle,err :=  storage2.CreateFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
