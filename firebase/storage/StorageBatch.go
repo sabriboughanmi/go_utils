@@ -174,7 +174,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 			}(&wg, errorChannel)
 			break
 		case storageAddType:
-			metadata, _ := operation.MetaData.(addOperationMetaData)
+		/*	metadata, _ := operation.MetaData.(addOperationMetaData)
 			wg.Add(1)
 			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
 				defer wg.Done()
@@ -185,7 +185,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 					errorChan <- err
 					return
 				}
-			}(&wg, errorChannel)
+			}(&wg, errorChannel)*/
 			break
 		}
 	}
