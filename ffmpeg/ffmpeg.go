@@ -100,9 +100,10 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 
 		//moderate frame every x sec
 		go func(waitGroup *sync.WaitGroup, errorChan chan error) {
-			defer wg.Done()
+
 			//Done: path = creation temp file
 			path, err := osUtils.CreateTempFile("pic.png", nil)
+			defer wg.Done()
 			if err != nil {
 				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
 				return
@@ -147,29 +148,33 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporarySto
 
 // ModerateVideoFrame verify if an extended frame contain forbidden content
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
+	var Paths []string = strings.Split(localPath, "\\")
 
-	storagePath := localPath[strings.Index(localPath, "\\"):]
-
+	storagePath := Paths[len(Paths)-1]
+	fmt.Printf("localPath %s \n", localPath)
+	m := make(map[string]string)
+	m["image/png"] = "image/png"
 	// create image in  storage
-	objectHandle,err :=  storage2.CreateFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, nil, tempStorageObject.Client, ctx)
+	objectHandle,err :=  storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath,"image/png", m, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
 	fmt.Println("object name"+ objectHandle.ObjectName())
 
 	// remove image
-	defer func() {
+	/*defer func() {
 		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
 			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
 			return
 		}
-	}()
+	}()*/
 
 
 	storageFileFullUrl := fmt.Sprintf("gs:\\\\%s%s", tempStorageObject.Bucket, storagePath)
 
 	fmt.Printf("storageFileFullUrl %s \n", storageFileFullUrl)
-	image := Vision.NewImageFromURI(storageFileFullUrl)
+	 storageUri := "gs://tested4you-dev.appspot.com/" + Paths[len(Paths)-1]
+	image := Vision.NewImageFromURI(storageUri)
 
 	fmt.Printf("DetectSafeSearch1")
 	props, err := client.DetectSafeSearch(ctx, image, nil)
