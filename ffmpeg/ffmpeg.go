@@ -12,6 +12,7 @@ import (
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -108,8 +109,8 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
 				return
 			}
-			defer os.Remove(path)
-
+			//defer os.Remove(path)
+			fmt.Println(path)
 			if err = v.GetThumbnailAtSec(path, duration); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
@@ -122,7 +123,7 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 		}(&wg, errorChannel)
 
 		duration += sequenceDuration
-		println("%f",duration)
+		fmt.Printf("%0.0f\n", duration)
 		if duration >= moderateDuration {
 			break
 		}
@@ -148,18 +149,21 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporarySto
 
 // ModerateVideoFrame verify if an extended frame contain forbidden content
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
-	var Paths []string = strings.Split(localPath, "\\")
+	var Paths = strings.Split(localPath, "\\")
 
-	storagePath := Paths[len(Paths)-1]
+	storagePath :=  Paths[len(Paths)-1]
 	fmt.Printf("localPath %s \n", localPath)
 	m := make(map[string]string)
-	m["image/png"] = "image/png"
+	m["images/png"] = "image/png"
+	_, error := ioutil.ReadFile(localPath)
+	if error != nil {
+		return false, error
+	}
 	// create image in  storage
-	objectHandle,err :=  storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath,"image/png", m, tempStorageObject.Client, ctx)
+	_, err := storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storage2.ImagePNG, m, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
-	fmt.Println("object name"+ objectHandle.ObjectName())
 
 	// remove image
 	/*defer func() {
@@ -169,11 +173,9 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		}
 	}()*/
 
+	storageUri := "gs://tested4you-dev.appspot.com/" +Paths[len(Paths)-1]
+	fmt.Printf("storageUri %s \n", storageUri)
 
-	storageFileFullUrl := fmt.Sprintf("gs:\\\\%s%s", tempStorageObject.Bucket, storagePath)
-
-	fmt.Printf("storageFileFullUrl %s \n", storageFileFullUrl)
-	 storageUri := "gs://tested4you-dev.appspot.com/" + Paths[len(Paths)-1]
 	image := Vision.NewImageFromURI(storageUri)
 
 	fmt.Printf("DetectSafeSearch1")
