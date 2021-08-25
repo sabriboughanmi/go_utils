@@ -1,12 +1,13 @@
 package ffmpeg
 
+
 import (
-	"cloud.google.com/go/storage"
-	vision "cloud.google.com/go/vision/apiv1"
-	"context"
-	"google.golang.org/api/option"
-	"sync"
-	"testing"
+"cloud.google.com/go/storage"
+vision "cloud.google.com/go/vision/apiv1"
+"context"
+"google.golang.org/api/option"
+"sync"
+"testing"
 )
 
 var storageClientOnce sync.Once
@@ -50,3 +51,4 @@ func TestModerateVideo(t *testing.T) {
 		t.Errorf("Error moderate video  - %v", err)
 	}
 }
+
