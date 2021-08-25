@@ -5,9 +5,11 @@ import (
 "cloud.google.com/go/storage"
 vision "cloud.google.com/go/vision/apiv1"
 "context"
-"google.golang.org/api/option"
+	"fmt"
+	"google.golang.org/api/option"
 "sync"
 "testing"
+	"time"
 )
 
 var storageClientOnce sync.Once
@@ -29,6 +31,14 @@ func GetStorageClient() (*storage.Client, error) {
 	return StorageClient, err
 }
 
+func track(msg string) (string, time.Time) {
+	return msg, time.Now()
+}
+
+func duration(msg string, start time.Time) {
+	fmt.Printf("%v: %v\n", msg, time.Since(start))
+}
+
 func TestModerateVideo(t *testing.T) {
 
 	storageClient, err := GetStorageClient()
@@ -46,6 +56,7 @@ func TestModerateVideo(t *testing.T) {
 	// Pre-declare an err variable to avoid shadowing client.
 	AnnotationClient, err := vision.NewImageAnnotatorClient(ctx, opt)
 
+	defer duration(track("\nModeration Took :"))
 	err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
 	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
