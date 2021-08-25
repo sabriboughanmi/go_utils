@@ -33,7 +33,6 @@ cloud.google.com/go/bigquery v1.7.0/go.mod h1://okPTzCYNXSlb24MZs83e2Do+h+VXtc4g
 cloud.google.com/go/bigquery v1.8.0/go.mod h1:J5hqkt3O0uAFnINi6JXValWIb1v0goeZM77hZzJN/fQ=
 cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7TKLgZqpHYE=
 cloud.google.com/go/datastore v1.1.0/go.mod h1:umbIZjpQpHh4hmRpGhH4tLFup+FVzqBi1b3c64qFpCk=
-cloud.google.com/go/firestore v1.5.0 h1:4qNItsmc4GP6UOZPGemmHY4ZfPofVhcaKXsYw9wm9oA=
 cloud.google.com/go/firestore v1.5.0/go.mod h1:c4nNYR1qdq7eaZ+jSc5fonrQN2k3M7sWATcYTiakjEo=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/pubsub v1.1.0/go.mod h1:EwwdRX2sKPjnvnqCa270oGRyludottCI76h+R3AArQw=
@@ -49,7 +48,6 @@ cloud.google.com/go/storage v1.16.0/go.mod h1:ieKBmUyzcftN5tbxwnXClMKH00CfcQ+xL6
 cloud.google.com/go/vision v0.1.0 h1:HbJoT0LbMAoMYAQmtRPEm7zmb4xKRI+jRTo6TScTytE=
 cloud.google.com/go/vision v0.1.0/go.mod h1:X17DgbLA3TlEh4d+rQPQO7yO5yAjZg4NBVO8WpEKgNU=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-firebase.google.com/go v3.13.0+incompatible h1:3TdYC3DDi6aHn20qoRkxwGqNgdjtblwVAyRLQwGn/+4=
 firebase.google.com/go v3.13.0+incompatible/go.mod h1:xlah6XbEyW6tbfSklcfe5FHJIwjt8toICdV5Wh9ptHs=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
@@ -172,10 +170,10 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210824160117-eac15750bf90 h1:GObRSx25SL8dBwvT/rd4bahvhar5YPJ10gHCAl7ejLY=
-github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210824160117-eac15750bf90/go.mod h1:H/4l++MOf6Ir1NnTbHuUgzsQNefBhgQyvGULr/IAhus=
-github.com/sabriboughanmi/go_utils/os v0.0.0-20210824160117-eac15750bf90 h1:hUczjPvrwCvocl3K8ZszWCM7CGRLrc0N5E0L33duNLg=
-github.com/sabriboughanmi/go_utils/os v0.0.0-20210824160117-eac15750bf90/go.mod h1:qRljxiY82Z454pGmRt1FiK7PSa7LoBeNd+F9y7DIep0=
+github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210825085101-cf248f51fa35 h1:1qEp8OEKccPiIdk0/XiCveb3cscPg6n24GMTw+8OzRc=
+github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210825085101-cf248f51fa35/go.mod h1:H/4l++MOf6Ir1NnTbHuUgzsQNefBhgQyvGULr/IAhus=
+github.com/sabriboughanmi/go_utils/os v0.0.0-20210825085101-cf248f51fa35 h1:QrGIoyYx0ltli3/00qikT7I5D4awQ9wdL4LN8tdLkSE=
+github.com/sabriboughanmi/go_utils/os v0.0.0-20210825085101-cf248f51fa35/go.mod h1:qRljxiY82Z454pGmRt1FiK7PSa7LoBeNd+F9y7DIep0=
 github.com/sabriboughanmi/go_utils/utils v0.0.0-20210824155135-aed492af54f0 h1:Bq080yulAj61IpplR48CrA7HJ9VlqrU9rmyzo7ogZhM=
 github.com/sabriboughanmi/go_utils/utils v0.0.0-20210824155135-aed492af54f0/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

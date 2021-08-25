@@ -121,7 +121,7 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 		}(&wg, errorChannel)
 
 		duration += sequenceDuration
-
+		println("%f",duration)
 		if duration >= moderateDuration {
 			break
 		}
