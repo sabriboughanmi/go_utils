@@ -12,7 +12,6 @@ import (
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -65,7 +64,7 @@ func (v *Video) GetDuration() float64 {
 
 // GetThumbnailAtSec Creates a Thumbnail at path for a given time
 func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
-
+	fmt.Printf(" secccccc %f\n", second)
 	cmds := []string{
 		"ffmpeg",
 		"-y",
@@ -95,12 +94,13 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
-
+	fmt.Printf("modDuration moderateDuration %0.0f\n", moderateDuration)
 	for {
-		wg.Add(1)
 
+		wg.Add(1)
+		duration+=sequenceDuration
 		//moderate frame every x sec
-		go func(waitGroup *sync.WaitGroup, errorChan chan error) {
+		go func(waitGroup *sync.WaitGroup, errorChan chan error){
 
 			//Done: path = creation temp file
 			path, err := osUtils.CreateTempFile("pic.png", nil)
@@ -109,22 +109,19 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
 				return
 			}
-			//defer os.Remove(path)
+
+			defer os.Remove(path)
 			fmt.Println(path)
 			if err = v.GetThumbnailAtSec(path, duration); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
-
 			if _, err = ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject); err != nil {
 				errorChan <- err
 				return
 			}
 
 		}(&wg, errorChannel)
-
-		duration += sequenceDuration
-		fmt.Printf("%0.0f\n", duration)
-		if duration >= moderateDuration {
+		if sequenceDuration+duration > moderateDuration {
 			break
 		}
 	}
@@ -151,14 +148,11 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporarySto
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
 	var Paths = strings.Split(localPath, "\\")
 
-	storagePath :=  Paths[len(Paths)-1]
+	storagePath := Paths[len(Paths)-1]
 	fmt.Printf("localPath %s \n", localPath)
 	m := make(map[string]string)
 	m["images/png"] = "image/png"
-	_, error := ioutil.ReadFile(localPath)
-	if error != nil {
-		return false, error
-	}
+
 	// create image in  storage
 	_, err := storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storage2.ImagePNG, m, tempStorageObject.Client, ctx)
 	if err != nil {
@@ -173,7 +167,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		}
 	}()*/
 
-	storageUri := "gs://tested4you-dev.appspot.com/" +Paths[len(Paths)-1]
+	storageUri := "gs://tested4you-dev.appspot.com/" + Paths[len(Paths)-1]
 	fmt.Printf("storageUri %s \n", storageUri)
 
 	image := Vision.NewImageFromURI(storageUri)
