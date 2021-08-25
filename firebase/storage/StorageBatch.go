@@ -178,7 +178,7 @@ func (wb *storageBatch) Commit(ctx context.Context) error {
 			wg.Add(1)
 			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
 				defer wg.Done()
-				if _,err := CreateStorageFileFromLocal(metadata.bucket, metadata.fileName, metadata.localPath, metadata.fileMetaData, wb.client, ctx); err != nil {
+				if _,err := CreateStorageFileFromLocal(metadata.bucket, metadata.fileName, metadata.localPath,"", metadata.fileMetaData, wb.client, ctx); err != nil {
 					if metadata.onFailure != nil {
 						metadata.onFailure(err)
 					}
