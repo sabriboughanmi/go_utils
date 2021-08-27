@@ -87,6 +87,10 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 	return nil
 }
 
+type FfmpegError error
+
+var ForbiddenContentError = errors.New("Forbidden Content")
+
 // ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) error {
 	errorChannel := make(chan error)
@@ -100,20 +104,29 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 
 		//moderate frame every x sec
 		go func(frameSec float64, waitGroup *sync.WaitGroup, errorChan chan error) {
+			defer wg.Done()
 
 			path, err := osUtils.CreateTempFile("pic.png", nil)
-			defer wg.Done()
 			if err != nil {
 				errorChan <- fmt.Errorf("CreateTempFile: , Error:  %v", err)
 				return
 			}
 
-			defer os.Remove(path)
+			defer func(name string) {
+				if err = os.Remove(name); err != nil {
+					fmt.Printf("ModerateVideo Error removing temp file - %v\n", err)
+				}
+			}(path)
 			if err = v.GetThumbnailAtSec(path, frameSec); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
-			if _, err = ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject); err != nil {
+			ok, err := ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject)
+			if err != nil {
 				errorChan <- err
+				return
+			}
+			if !ok {
+				errorChan <- ForbiddenContentError
 				return
 			}
 
@@ -127,13 +140,14 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 	}
 
 	wg.Wait()
-	var receivedErrors []string
+
+	var receivedErrors []error
 	func() {
 		//select
 		for {
 			select {
 			case err := <-errorChannel:
-				receivedErrors = append(receivedErrors, err.Error())
+				receivedErrors = append(receivedErrors, err)
 				break
 			default:
 				return
@@ -141,8 +155,13 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 			}
 		}
 	}()
+	for _, err := range receivedErrors {
+		if err == ForbiddenContentError {
+			return err
+		}
+	}
 	if len(receivedErrors) > 0 {
-		return fmt.Errorf("Got %d Errors while commit - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))
+		return fmt.Errorf("Got %d Errors while moderating video - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))
 	}
 	return nil
 }
@@ -160,7 +179,8 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporarySto
 	}
 }
 
-// ModerateVideoFrame verify if an extended frame contain forbidden content
+// ModerateVideoFrame if verify if an extended frame contain forbidden content.
+//False -> frame contains forbidden content.
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
 	var Paths = strings.Split(localPath, "\\")
 
@@ -183,12 +203,12 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 
 	image := Vision.NewImageFromURI(storageUri)
 
- 	props, err := client.DetectSafeSearch(ctx, image, nil)
+	props, err := client.DetectSafeSearch(ctx, image, nil)
 	if err != nil {
 		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
 	}
 
- 	var tolr = protoreflect.EnumNumber(tolerance)
+	var tolr = protoreflect.EnumNumber(tolerance)
 
 	if props.Adult.Number() > tolr || props.Violence.Number() > tolr {
 		return false, errors.New("frame contain forbidden content")

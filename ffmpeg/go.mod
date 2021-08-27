@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/vision v0.1.0
 	github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210825121105-3bac89b556f6
 	github.com/sabriboughanmi/go_utils/os v0.0.0-20210825121105-3bac89b556f6
+	github.com/sabriboughanmi/go_utils/utils v0.0.0-20210824155135-aed492af54f0
 	google.golang.org/api v0.54.0
 	google.golang.org/protobuf v1.27.1
 )
