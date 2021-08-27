@@ -10,6 +10,7 @@ import (
 	"fmt"
 	storage2 "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
+	"github.com/sabriboughanmi/go_utils/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
@@ -126,7 +127,23 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 	}
 
 	wg.Wait()
+	var receivedErrors []string
+	func() {
+		//select
+		for {
+			select {
+			case err := <-errorChannel:
+				receivedErrors = append(receivedErrors, err.Error())
+				break
+			default:
+				return
 
+			}
+		}
+	}()
+	if len(receivedErrors) > 0 {
+		return fmt.Errorf("Got %d Errors while commit - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))
+	}
 	return nil
 }
 
