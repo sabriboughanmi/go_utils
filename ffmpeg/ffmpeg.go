@@ -92,13 +92,13 @@ type FfmpegError error
 var ForbiddenContentError = errors.New("Forbidden Content")
 
 // ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error,bool) {
+func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	errorChannel := make(chan error)
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
-fmt.Printf("moderateDuration %v\n",moderateDuration)
+	fmt.Printf("path %s\n", v.Filepath())
 	for {
 		wg.Add(1)
 
@@ -141,29 +141,20 @@ fmt.Printf("moderateDuration %v\n",moderateDuration)
 
 	wg.Wait()
 
-	var receivedErrors []error
-	func() {
-		//select
-		for {
-			select {
-			case err := <-errorChannel:
-				receivedErrors = append(receivedErrors, err)
-				break
-			default:
-				return
+	close(errorChannel)
 
-			}
-		}
-	}()
-	for _, err := range receivedErrors {
+	var receivedErrors []error
+	for err := range errorChannel {
 		if err == ForbiddenContentError {
-			return err , false
+			return err, false
 		}
+		receivedErrors = append(receivedErrors, err)
 	}
+
 	if len(receivedErrors) > 0 {
-		return (fmt.Errorf("Got %d Errors while moderating video - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))),false
+		return (fmt.Errorf("Got %d Errors while moderating video - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))), false
 	}
-	return nil , true
+	return nil, true
 }
 
 type temporaryStorageObjectRef struct {

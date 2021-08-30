@@ -39,7 +39,6 @@ func duration(msg string, start time.Time) {
 }
 
 func TestModerateVideo(t *testing.T) {
-
 	storageClient, err := GetStorageClient()
 	if err != nil {
 		t.Errorf("Error - %v", err)
@@ -60,5 +59,6 @@ func TestModerateVideo(t *testing.T) {
 		if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
+
 	fmt.Printf("testting %v", ok)
 }
