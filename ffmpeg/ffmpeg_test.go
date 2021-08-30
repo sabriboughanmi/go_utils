@@ -55,7 +55,7 @@ func TestModerateVideo(t *testing.T) {
 	AnnotationClient, err := vision.NewImageAnnotatorClient(ctx, opt)
 
 	defer duration(track("\nModeration Took :"))
-	 err, ok := vid.ModerateVideoTT(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
+	 err, ok := vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
 		if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
