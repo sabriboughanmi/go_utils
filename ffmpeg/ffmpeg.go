@@ -98,7 +98,7 @@ func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tol
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
 	duration = 0
-
+fmt.Printf("moderateDuration %v\n",moderateDuration)
 	for {
 		wg.Add(1)
 
