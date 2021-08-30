@@ -106,7 +106,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 	return framesCount
 }
 
-//ModerateVideoTT verify if a video contain forbidden content
+//ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
 	wg := sync.WaitGroup{}
