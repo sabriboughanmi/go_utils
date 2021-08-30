@@ -174,11 +174,11 @@ github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6L
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210830164810-eb4dfddf001e h1:j5f85ELD+3exQ4izDeVcxb00m2RWRD6IHFT+K8MLtMw=
 github.com/sabriboughanmi/go_utils/firebase/storage v0.0.0-20210830164810-eb4dfddf001e/go.mod h1:480lHydSMtpH+PWc1qagJ05n+jdH/tqc8qlnzXTeWwc=
-github.com/sabriboughanmi/go_utils/os v0.0.0-20210830162931-9cc6905a528a h1:QP4YjnTl2pDsoGf+wJHAUbwQReqE6aid4CA0fuhnjwY=
-github.com/sabriboughanmi/go_utils/os v0.0.0-20210830162931-9cc6905a528a/go.mod h1:qRljxiY82Z454pGmRt1FiK7PSa7LoBeNd+F9y7DIep0=
+github.com/sabriboughanmi/go_utils/os v0.0.0-20210830170746-fa8a176c65d6 h1:fi49DL5Djrl9oZKfD/4LCcMLA/zcsOOWZqJNkqqKc3A=
+github.com/sabriboughanmi/go_utils/os v0.0.0-20210830170746-fa8a176c65d6/go.mod h1:qRljxiY82Z454pGmRt1FiK7PSa7LoBeNd+F9y7DIep0=
 github.com/sabriboughanmi/go_utils/utils v0.0.0-20210825121105-3bac89b556f6/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
-github.com/sabriboughanmi/go_utils/utils v0.0.0-20210830162931-9cc6905a528a h1:Gruyzor4qs78TsDO/cn33q9djqJGHOj1VT1bFLFnGDc=
-github.com/sabriboughanmi/go_utils/utils v0.0.0-20210830162931-9cc6905a528a/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
+github.com/sabriboughanmi/go_utils/utils v0.0.0-20210830170746-fa8a176c65d6 h1:cGq3tytXoDBivXlH71Dl+e2t91CIXNfjQ9iHMTDX5wY=
+github.com/sabriboughanmi/go_utils/utils v0.0.0-20210830170746-fa8a176c65d6/go.mod h1:TsZOAKK9afJU70jfg8vaFL1YbBBT6Y2gUB97qS4IYaI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=

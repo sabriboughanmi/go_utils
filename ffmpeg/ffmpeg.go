@@ -91,8 +91,8 @@ type FfmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
 
-//ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
+//ModerateVideoTT verify if a video contain forbidden content
+func (v *Video) ModerateVideoTT(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	errorChannel := make(chan error)
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
