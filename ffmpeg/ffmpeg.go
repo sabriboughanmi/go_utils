@@ -193,7 +193,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 	}()*/
 
 	storageUri := "gs://tested4you-dev.appspot.com" + Paths[len(Paths)-1]
-	fmt.Printf("%s\n", storageUri)
+	fmt.Printf("storageUri  %s\n", storageUri)
 	image := Vision.NewImageFromURI(storageUri)
 
 	props, err := client.DetectSafeSearch(ctx, image, nil)
