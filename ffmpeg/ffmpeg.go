@@ -195,7 +195,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		}
 	}()
 
-	storageUri := "gs://tested4you-dev.appspot.com/" + Paths[len(Paths)-1]
+	storageUri := "gs://tested4you-dev.appspot.com" + Paths[len(Paths)-1]
 
 	image := Vision.NewImageFromURI(storageUri)
 
