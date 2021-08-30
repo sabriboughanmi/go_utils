@@ -91,9 +91,6 @@ type FfmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
 
-
-
-
 //ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	errorChannel := make(chan error)
@@ -188,15 +185,15 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 	}
 
 	// remove image
-	defer func() {
+	/*	defer func() {
 		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
 			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
 			return
 		}
-	}()
+	}()*/
 
 	storageUri := "gs://tested4you-dev.appspot.com" + Paths[len(Paths)-1]
-
+	fmt.Printf("%s\n", storageUri)
 	image := Vision.NewImageFromURI(storageUri)
 
 	props, err := client.DetectSafeSearch(ctx, image, nil)
