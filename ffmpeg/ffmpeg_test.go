@@ -1,14 +1,13 @@
 package ffmpeg
 
-
 import (
-"cloud.google.com/go/storage"
-vision "cloud.google.com/go/vision/apiv1"
-"context"
+	"cloud.google.com/go/storage"
+	vision "cloud.google.com/go/vision/apiv1"
+	"context"
 	"fmt"
 	"google.golang.org/api/option"
-"sync"
-"testing"
+	"sync"
+	"testing"
 	"time"
 )
 
@@ -57,9 +56,9 @@ func TestModerateVideo(t *testing.T) {
 	AnnotationClient, err := vision.NewImageAnnotatorClient(ctx, opt)
 
 	defer duration(track("\nModeration Took :"))
-	err = vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
-	if err != nil {
+	 err, ok := vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
+		if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
+	fmt.Printf("testting %v", ok)
 }
-
