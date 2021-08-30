@@ -10,13 +10,12 @@ import (
 	"fmt"
 	storage2 "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
-	"github.com/sabriboughanmi/go_utils/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -87,28 +86,40 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 	return nil
 }
 
-
-
-
 type FfmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
 
-//ModerateVideoTT verify if a video contain forbidden content
-func (v *Video) ModerateVideoTT(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
-	errorChannel := make(chan error)
-	var duration, moderateDuration float64
-	moderateDuration = v.GetDuration()
-	var wg sync.WaitGroup
-
-	duration = 0
-	fmt.Printf("path %s\n", v.Filepath())
+//calculateFramesToModerate returns the number of frames to moderate
+func (v *Video) calculateFramesToModerate(durationStep float64) int {
+	var videoDuration = v.GetDuration()
+	var duration float64 = 0
+	var framesCount = 0
 	for {
+		framesCount++
+		duration += durationStep
+		if durationStep+duration > videoDuration {
+			break
+		}
+	}
+
+	return framesCount
+}
+
+//ModerateVideoTT verify if a video contain forbidden content
+func (v *Video) ModerateVideoTT(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
+	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
+	wg := sync.WaitGroup{}
+	var duration float64 = 0
+	errorChannel := make(chan error, framesToModerateCount)
+	for i := 0; i < framesToModerateCount; i++ {
 		wg.Add(1)
 
 		//moderate frame every x sec
-		func(frameSec float64, waitGroup *sync.WaitGroup, errorChan chan error) {
-			defer wg.Done()
+		go func(frameSec float64, waitGroup *sync.WaitGroup, errorChan chan error) {
+			defer func() {
+				waitGroup.Done()
+			}()
 
 			path, err := osUtils.CreateTempFile("pic.png", nil)
 			if err != nil {
@@ -134,30 +145,24 @@ func (v *Video) ModerateVideoTT(sequenceDuration float64, ctx context.Context, t
 				errorChan <- ForbiddenContentError
 				return
 			}
-
 		}(duration, &wg, errorChannel)
-
-		duration += sequenceDuration
-
-		if sequenceDuration+duration > moderateDuration {
-			break
-		}
+		duration += durationStep
 	}
 
 	wg.Wait()
 
 	close(errorChannel)
 
-	var receivedErrors []error
+	var receivedErrors []string
 	for err := range errorChannel {
 		if err == ForbiddenContentError {
 			return err, false
 		}
-		receivedErrors = append(receivedErrors, err)
+		receivedErrors = append(receivedErrors, err.Error())
 	}
 
 	if len(receivedErrors) > 0 {
-		return (fmt.Errorf("Got %d Errors while moderating video - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))), false
+		return fmt.Errorf("Got %d Errors while moderating video - Errors : %s  \n", len(receivedErrors), receivedErrors), false
 	}
 	return nil, true
 }
@@ -178,15 +183,15 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporarySto
 // ModerateVideoFrame if verify if an extended frame contain forbidden content.
 //False -> frame contains forbidden content.
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
-	var Paths = strings.Split(localPath, "\\")
 
-	storagePath := Paths[len(Paths)-1]
+	storagePath := "TempModerationFiles/" + filepath.Base(localPath)
 	// create image in  storage
 	_, err := storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storage2.ImagePNG, nil, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
 
+	storageUri := "gs://tested4you-dev.appspot.com/" + storagePath
 	// remove image
 	/*	defer func() {
 		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
@@ -195,10 +200,10 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		}
 	}()*/
 
-	storageUri := "gs://tested4you-dev.appspot.com" + Paths[len(Paths)-1]
-	fmt.Printf("storageUri  %s\n", storageUri)
 	image := Vision.NewImageFromURI(storageUri)
-
+	if image == nil {
+		return false, fmt.Errorf("error getting Image from Storage URI '%s'", storageUri)
+	}
 	props, err := client.DetectSafeSearch(ctx, image, nil)
 	if err != nil {
 		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
