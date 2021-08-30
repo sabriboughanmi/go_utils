@@ -93,18 +93,18 @@ var ForbiddenContentError = errors.New("Forbidden Content")
 
 //ModerateVideoT verify if a video contain forbidden content
 func (v *Video) ModerateVideoT(sequenceDuration float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
-	fmt.Println("ModerateVideo")
 	errorChannel := make(chan error)
 	var duration, moderateDuration float64
 	moderateDuration = v.GetDuration()
 	var wg sync.WaitGroup
+
 	duration = 0
 	fmt.Printf("path %s\n", v.Filepath())
 	for {
 		wg.Add(1)
 
 		//moderate frame every x sec
-		go func(frameSec float64, waitGroup *sync.WaitGroup, errorChan chan error) {
+		func(frameSec float64, waitGroup *sync.WaitGroup, errorChan chan error) {
 			defer wg.Done()
 
 			path, err := osUtils.CreateTempFile("pic.png", nil)
@@ -123,6 +123,7 @@ func (v *Video) ModerateVideoT(sequenceDuration float64, ctx context.Context, to
 			}
 			ok, err := ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject)
 			if err != nil {
+				fmt.Printf("ModerateVideoFrame got an - error : %v\n", err)
 				errorChan <- err
 				return
 			}
