@@ -191,7 +191,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
 
-	storageUri := "gs://tested4you-dev.appspot.com/" + storagePath
+	storageUri := tempStorageObject.Bucket + "/" + storagePath
 	// remove image
 	/*	defer func() {
 		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
