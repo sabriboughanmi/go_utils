@@ -24,18 +24,7 @@ const (
 	VideoAVI  FileContentType = "video/avi"
 )
 
-/*
-func GetDownloadURL(bucket, storagePath string) string {
 
-	staticUrl := "https://firebasestorage.googleapis.com/v0/b/{Bucket}/o/{FilePath}?alt=media&token={AccessToken}"
-
-	keyValues := make(map[string]string)
-	keyValues["Bucket"] = bucket
-	keyValues["AccessToken"] = ""
-	keyValues["FilePath"] = strings.ReplaceAll(storagePath, "/", "%2F")
-
-	return ReplaceKeys(staticUrl, keyValues)
-}*/
 
 //FileExists Checks if a Storage File Exists
 func FileExists(bucket, storagePath string, client *storage.Client, ctx context.Context) (bool, error) {
