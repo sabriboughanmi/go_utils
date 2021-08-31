@@ -270,13 +270,21 @@ func RenameFile(srcBucket, srcName, dstName string, client *storage.Client, ctx 
 }
 
 // GeneratePublicUrl generates a storage object signed URL with GET method.
-func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceAccountEmail string) (string, error) {
+//Note! if the expiresDateTime is not assigned a 15minute expiration will be applied.
+//
+//the expiration may be no more than seven days in the future.
+func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceAccountEmail string, expirationDateTime *time.Time) (string, error) {
 	opts := &storage.SignedURLOptions{
 		Scheme:         storage.SigningSchemeV4,
 		Method:         "GET",
 		GoogleAccessID: serviceAccountEmail,
 		PrivateKey:     []byte(serviceAccountPrivateKey),
-		Expires:        time.Now().Add(15 * time.Minute),
+		Expires: func() time.Time {
+			if expirationDateTime != nil {
+				return *expirationDateTime
+			}
+			return time.Now().Add(15 * time.Minute)
+		}(),
 	}
 	u, err := storage.SignedURL(bucket, storageObject, opts)
 	if err != nil {
