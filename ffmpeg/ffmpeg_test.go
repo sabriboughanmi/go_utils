@@ -5,7 +5,9 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
+	"io/ioutil"
 	"sync"
 	"testing"
 	"time"
@@ -18,6 +20,10 @@ var ctx context.Context
 func init() {
 	ctx = context.Background()
 }
+
+const (
+	serviceAccountPath = "./../private_data/serviceAccountKey.json"
+)
 
 //GetStorageClient returns a Singleton *storage.Client
 func GetStorageClient() (*storage.Client, error) {
@@ -44,19 +50,31 @@ func TestModerateVideo(t *testing.T) {
 		t.Errorf("Error - %v", err)
 	}
 
-	var temporaryStorageObject = GetTemporaryStorageObjectRef(storageClient, "tested4you-dev.appspot.com")
+	jsonKey, err := ioutil.ReadFile(serviceAccountPath)
+	if err != nil {
+		t.Errorf("ioutil.ReadFile: %v", err)
+		return
+	}
+	conf, err := google.JWTConfigFromJSON(jsonKey)
+	if err != nil {
+		t.Errorf("google.JWTConfigFromJSON: %v", err)
+		return
+	}
+
+	var temporaryStorageObject = GetTemporaryStorageObjectRef(storageClient, "tested4you-dev.appspot.com", string(conf.PrivateKey), conf.Email)
 	vid, err := LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
 	if err != nil {
 		t.Errorf("Error load video  - %v", err)
 	}
 
-	opt := option.WithCredentialsFile("./../private_data/serviceAccountKey.json")
+	opt := option.WithCredentialsFile(serviceAccountPath)
 	// Pre-declare an err variable to avoid shadowing client.
 	AnnotationClient, err := vision.NewImageAnnotatorClient(ctx, opt)
 
 	defer duration(track("\nModeration Took :"))
-	 err, ok := vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
-		if err != nil {
+
+	err, ok := vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
+	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
 
