@@ -203,7 +203,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		}
 	}()
 
-	var expirationDateTime = time.Now().Add(1 * time.Minute)
+	var expirationDateTime = time.Now().Add(72 * time.Hour)
 	frameImagePublicUrl, err := storageUtils.GeneratePublicUrl(storageObject.BucketName(),
 		storageObject.ObjectName(),
 		tempStorageObject.ServiceAccountPrivateKey,
@@ -211,7 +211,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 	if err != nil {
 		return false, fmt.Errorf("Error generating public URL for the Frame Image : , Error:  %v", err)
 	}
-
+	fmt.Println(frameImagePublicUrl)
 	image := Vision.NewImageFromURI(frameImagePublicUrl)
 	if image == nil {
 		return false, fmt.Errorf("error getting Image from Storage URL '%s'", frameImagePublicUrl)
