@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 //StorageFileContentType represents a file Content type in Cloud Storage in order to be recognized by the browser
@@ -17,24 +18,13 @@ type FileContentType string
 const (
 	ImageGif  FileContentType = "image/gif"
 	ImageJPEG FileContentType = "image/jpeg"
-	ImagePNG FileContentType = "image/png"
-	VideoMP4 FileContentType = "video/mp4"
-	VideoMOV FileContentType = "video/mov"
-	VideoAVI FileContentType = "video/avi"
+	ImagePNG  FileContentType = "image/png"
+	VideoMP4  FileContentType = "video/mp4"
+	VideoMOV  FileContentType = "video/mov"
+	VideoAVI  FileContentType = "video/avi"
 )
 
-/*
-func GetDownloadURL(bucket, storagePath string) string {
 
-	staticUrl := "https://firebasestorage.googleapis.com/v0/b/{Bucket}/o/{FilePath}?alt=media&token={AccessToken}"
-
-	keyValues := make(map[string]string)
-	keyValues["Bucket"] = bucket
-	keyValues["AccessToken"] = ""
-	keyValues["FilePath"] = strings.ReplaceAll(storagePath, "/", "%2F")
-
-	return ReplaceKeys(staticUrl, keyValues)
-}*/
 
 //FileExists Checks if a Storage File Exists
 func FileExists(bucket, storagePath string, client *storage.Client, ctx context.Context) (bool, error) {
@@ -201,7 +191,7 @@ func CreateFile(bucket, fileName string, content []byte, contentType FileContent
 }
 
 // CreateStorageFileFromLocal creates a file in Google Cloud Storage from a Local file Path.
-func CreateStorageFileFromLocal(bucket, fileName, localPath string, contentType FileContentType,fileMetaData map[string]string, client *storage.Client, ctx context.Context) (*storage.ObjectHandle, error) {
+func CreateStorageFileFromLocal(bucket, fileName, localPath string, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) (*storage.ObjectHandle, error) {
 	data, err := ioutil.ReadFile(localPath)
 	if err != nil {
 		return nil, err
@@ -212,7 +202,7 @@ func CreateStorageFileFromLocal(bucket, fileName, localPath string, contentType 
 	if string(contentType) != "" {
 		wc.ContentType = string(contentType)
 	}
-//defer 
+	//defer
 	if fileMetaData != nil {
 		wc.Metadata = fileMetaData
 	} else {
@@ -266,4 +256,28 @@ func RenameFile(srcBucket, srcName, dstName string, client *storage.Client, ctx 
 		return fmt.Errorf("Object(%s).Delete: %v", srcName, err)
 	}
 	return nil
+}
+
+// GeneratePublicUrl generates a storage object signed URL with GET method.
+//Note! if the expiresDateTime is not assigned a 15minute expiration will be applied.
+//
+//the expiration may be no more than seven days in the future.
+func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceAccountEmail string, expirationDateTime *time.Time) (string, error) {
+	opts := &storage.SignedURLOptions{
+		Scheme:         storage.SigningSchemeV4,
+		Method:         "GET",
+		GoogleAccessID: serviceAccountEmail,
+		PrivateKey:     []byte(serviceAccountPrivateKey),
+		Expires: func() time.Time {
+			if expirationDateTime != nil {
+				return *expirationDateTime
+			}
+			return time.Now().Add(15 * time.Minute)
+		}(),
+	}
+	u, err := storage.SignedURL(bucket, storageObject, opts)
+	if err != nil {
+		return "", fmt.Errorf("storage.SignedURL: %v", err)
+	}
+	return u, nil
 }

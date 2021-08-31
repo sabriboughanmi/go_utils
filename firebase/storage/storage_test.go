@@ -4,7 +4,6 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	firebase "firebase.google.com/go"
-	"fmt"
 	"google.golang.org/api/option"
 	"sync"
 	"testing"
@@ -43,24 +42,9 @@ func GetStorageClient() (*storage.Client, error) {
 	return StorageClient, err
 }
 
-func TestMoveFile(t *testing.T) {
-	var srcBucket = "tested4you-dev.appspot.com"
-	var dstBucket = "tested4you-dev.appspot.com"
-	var srcStoragePath = "pages/test/img12.jpg"
-	var dstStoragePath = "pages/nex test2/img12.jpg"
+func TestGeneratePublicUrl(t *testing.T) {
 
-	storageClient, err := GetStorageClient()
-	if err != nil {
-		t.Errorf("Error - %v", err)
-	}
-	storageBatch := Batch(storageClient)
-
-	storageBatch.Move(srcBucket, dstBucket, srcStoragePath, dstStoragePath, func(err error) {
-		fmt.Printf("moving file error %v", err)
-	})
-
-	if err = storageBatch.Commit(ctx); err != nil {
-		t.Errorf("MoveFile Error - %v", err)
-	}
 
 }
+
+

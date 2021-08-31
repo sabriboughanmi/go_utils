@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	storage2 "github.com/sabriboughanmi/go_utils/firebase/storage"
+	storageUtils "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
@@ -107,7 +107,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 }
 
 //ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
+func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *moderateVideoMetadata, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
 	wg := sync.WaitGroup{}
 	var duration float64 = 0
@@ -167,42 +167,54 @@ func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, toleran
 	return nil, true
 }
 
-type temporaryStorageObjectRef struct {
-	Client *st.Client
-	Bucket string
+type moderateVideoMetadata struct {
+	Client                   *st.Client
+	Bucket                   string
+	ServiceAccountPrivateKey string
+	ServiceAccountEmail      string
 }
 
-//GetTemporaryStorageObjectRef is used to send necessary data to ModerateVideoFrame
-func GetTemporaryStorageObjectRef(client *st.Client, bucket string) temporaryStorageObjectRef {
-	return temporaryStorageObjectRef{
-		Client: client,
-		Bucket: bucket,
+//GetModerateVideoMetadata is used to send necessary data to ModerateVideoFrame
+func GetModerateVideoMetadata(client *st.Client, bucket, serviceAccountPrivateKey, serviceAccountEmail string) moderateVideoMetadata {
+	return moderateVideoMetadata{
+		Client:                   client,
+		Bucket:                   bucket,
+		ServiceAccountPrivateKey: serviceAccountPrivateKey,
+		ServiceAccountEmail:      serviceAccountEmail,
 	}
 }
 
 // ModerateVideoFrame if verify if an extended frame contain forbidden content.
 //False -> frame contains forbidden content.
-func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
+func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *moderateVideoMetadata) (bool, error) {
 
 	storagePath := "TempModerationFiles/" + filepath.Base(localPath)
 	// create image in  storage
-	_, err := storage2.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storage2.ImagePNG, nil, tempStorageObject.Client, ctx)
+	storageObject, err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storageUtils.ImagePNG, nil, tempStorageObject.Client, ctx)
 	if err != nil {
 		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
 	}
 
-	storageUri := "gs://tested4you-dev.appspot.com/" + storagePath
 	// remove image
-	/*	defer func() {
-		if err := storage2.RemoveFile(tempStorageObject.Bucket, storagePath, tempStorageObject.Client, ctx); err != nil {
+	defer func() {
+		if err := storageUtils.RemoveFile(storageObject.BucketName(), storageObject.ObjectName(), tempStorageObject.Client, ctx); err != nil {
 			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
 			return
 		}
-	}()*/
+	}()
 
-	image := Vision.NewImageFromURI(storageUri)
+	var expirationDateTime = time.Now().Add(72 * time.Hour)
+	frameImagePublicUrl, err := storageUtils.GeneratePublicUrl(storageObject.BucketName(),
+		storageObject.ObjectName(),
+		tempStorageObject.ServiceAccountPrivateKey,
+		tempStorageObject.ServiceAccountEmail, &expirationDateTime)
+	if err != nil {
+		return false, fmt.Errorf("Error generating public URL for the Frame Image : , Error:  %v", err)
+	}
+	fmt.Println(frameImagePublicUrl)
+	image := Vision.NewImageFromURI(frameImagePublicUrl)
 	if image == nil {
-		return false, fmt.Errorf("error getting Image from Storage URI '%s'", storageUri)
+		return false, fmt.Errorf("error getting Image from Storage URL '%s'", frameImagePublicUrl)
 	}
 	props, err := client.DetectSafeSearch(ctx, image, nil)
 	if err != nil {
