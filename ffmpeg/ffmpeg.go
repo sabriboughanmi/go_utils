@@ -311,7 +311,6 @@ func LoadVideo(path string) (*Video, error) {
 			break
 		}
 	}
-
 	width := desc.Streams[dsIndex].Width
 	height := desc.Streams[dsIndex].Height
 	if desc.Streams[dsIndex].Tags.Rotation != nil {
