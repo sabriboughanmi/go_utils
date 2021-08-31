@@ -107,7 +107,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 }
 
 //ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *temporaryStorageObjectRef, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
+func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *moderateVideoMetadata, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
 	wg := sync.WaitGroup{}
 	var duration float64 = 0
@@ -167,16 +167,16 @@ func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, toleran
 	return nil, true
 }
 
-type temporaryStorageObjectRef struct {
+type moderateVideoMetadata struct {
 	Client                   *st.Client
 	Bucket                   string
 	ServiceAccountPrivateKey string
 	ServiceAccountEmail      string
 }
 
-//GetTemporaryStorageObjectRef is used to send necessary data to ModerateVideoFrame
-func GetTemporaryStorageObjectRef(client *st.Client, bucket, serviceAccountPrivateKey, serviceAccountEmail string) temporaryStorageObjectRef {
-	return temporaryStorageObjectRef{
+//GetModerateVideoMetadata is used to send necessary data to ModerateVideoFrame
+func GetModerateVideoMetadata(client *st.Client, bucket, serviceAccountPrivateKey, serviceAccountEmail string) moderateVideoMetadata {
+	return moderateVideoMetadata{
 		Client:                   client,
 		Bucket:                   bucket,
 		ServiceAccountPrivateKey: serviceAccountPrivateKey,
@@ -186,7 +186,7 @@ func GetTemporaryStorageObjectRef(client *st.Client, bucket, serviceAccountPriva
 
 // ModerateVideoFrame if verify if an extended frame contain forbidden content.
 //False -> frame contains forbidden content.
-func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *temporaryStorageObjectRef) (bool, error) {
+func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *moderateVideoMetadata) (bool, error) {
 
 	storagePath := "TempModerationFiles/" + filepath.Base(localPath)
 	// create image in  storage

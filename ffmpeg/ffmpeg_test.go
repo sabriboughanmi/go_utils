@@ -61,7 +61,7 @@ func TestModerateVideo(t *testing.T) {
 		return
 	}
 
-	var temporaryStorageObject = GetTemporaryStorageObjectRef(storageClient, "tested4you-dev.appspot.com", string(conf.PrivateKey), conf.Email)
+	var temporaryStorageObject = GetModerateVideoMetadata(storageClient, "tested4you-dev.appspot.com", string(conf.PrivateKey), conf.Email)
 	vid, err := LoadVideo("C:/Users/sabri/Downloads/vd.mp4")
 	if err != nil {
 		t.Errorf("Error load video  - %v", err)
