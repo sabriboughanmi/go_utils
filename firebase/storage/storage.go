@@ -269,8 +269,8 @@ func RenameFile(srcBucket, srcName, dstName string, client *storage.Client, ctx 
 	return nil
 }
 
-// GenerateSignedURL generates a storage object signed URL with GET method.
-func GenerateSignedURL(bucket, storageObject, serviceAccountPrivateKey, serviceAccountEmail string) (string, error) {
+// GeneratePublicUrl generates a storage object signed URL with GET method.
+func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceAccountEmail string) (string, error) {
 	opts := &storage.SignedURLOptions{
 		Scheme:         storage.SigningSchemeV4,
 		Method:         "GET",
