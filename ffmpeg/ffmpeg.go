@@ -208,19 +208,33 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		storageObject.ObjectName(),
 		tempStorageObject.ServiceAccountPrivateKey,
 		tempStorageObject.ServiceAccountEmail, &expirationDateTime)
-	if err != nil {
+	/*if err != nil {
 		return false, fmt.Errorf("Error generating public URL for the Frame Image : , Error:  %v", err)
 	}
 	fmt.Println(frameImagePublicUrl)
 	image := Vision.NewImageFromURI(frameImagePublicUrl)
+
+	fmt.Println(image)
 	if image == nil {
 		return false, fmt.Errorf("error getting Image from Storage URL '%s'", frameImagePublicUrl)
 	}
+
 	props, err := client.DetectSafeSearch(ctx, image, nil)
 	if err != nil {
 		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
 	}
+**/
+	f, err := os.Open(frameImagePublicUrl)
+	if err != nil {
+		return false, fmt.Errorf("os.Open, Error:  %v", err)
+	}
+	defer f.Close()
 
+	image, err := Vision.NewImageFromReader(f)
+	if err != nil {
+		return false, fmt.Errorf("NewImageFromReader, Error:  %v", err)
+	}
+	props, err := client.DetectSafeSearch(ctx, image, nil)
 	var tolr = protoreflect.EnumNumber(tolerance)
 
 	if props.Adult.Number() > tolr || props.Violence.Number() > tolr {
