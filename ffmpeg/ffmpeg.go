@@ -2,19 +2,16 @@ package ffmpeg
 
 import (
 	"bytes"
-	st "cloud.google.com/go/storage"
 	Vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	storageUtils "github.com/sabriboughanmi/go_utils/firebase/storage"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -107,7 +104,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 }
 
 //ModerateVideo verify if a video contain forbidden content
-func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, tempStorageObject *moderateVideoMetadata, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
+func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
 	wg := sync.WaitGroup{}
 	var duration float64 = 0
@@ -135,7 +132,7 @@ func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, toleran
 			if err = v.GetThumbnailAtSec(path, frameSec); err != nil {
 				errorChan <- fmt.Errorf("GetThumbnailAtSec %f : , Error:  %v", duration, err)
 			}
-			ok, err := ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient, tempStorageObject)
+			ok, err := ModerateVideoFrame(path, ctx, tolerance, imgAnnotClient)
 			if err != nil {
 				fmt.Printf("ModerateVideoFrame got an - error : %v\n", err)
 				errorChan <- err
@@ -167,65 +164,11 @@ func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, toleran
 	return nil, true
 }
 
-type moderateVideoMetadata struct {
-	Client                   *st.Client
-	Bucket                   string
-	ServiceAccountPrivateKey string
-	ServiceAccountEmail      string
-}
-
-//GetModerateVideoMetadata is used to send necessary data to ModerateVideoFrame
-func GetModerateVideoMetadata(client *st.Client, bucket, serviceAccountPrivateKey, serviceAccountEmail string) moderateVideoMetadata {
-	return moderateVideoMetadata{
-		Client:                   client,
-		Bucket:                   bucket,
-		ServiceAccountPrivateKey: serviceAccountPrivateKey,
-		ServiceAccountEmail:      serviceAccountEmail,
-	}
-}
-
 // ModerateVideoFrame if verify if an extended frame contain forbidden content.
 //False -> frame contains forbidden content.
-func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient, tempStorageObject *moderateVideoMetadata) (bool, error) {
-
-	storagePath := "TempModerationFiles/" + filepath.Base(localPath)
-	// create image in  storage
-	storageObject, err := storageUtils.CreateStorageFileFromLocal(tempStorageObject.Bucket, storagePath, localPath, storageUtils.ImagePNG, nil, tempStorageObject.Client, ctx)
-	if err != nil {
-		return false, fmt.Errorf("CreateStorageFileFromLocal : , Error:  %v", err)
-	}
-
-	// remove image
-	defer func() {
-		if err := storageUtils.RemoveFile(storageObject.BucketName(), storageObject.ObjectName(), tempStorageObject.Client, ctx); err != nil {
-			fmt.Printf("ModerateVideoFrame : Error deleting Temp file %v \n", err)
-			return
-		}
-	}()
-
-	var expirationDateTime = time.Now().Add(72 * time.Hour)
-	frameImagePublicUrl, err := storageUtils.GeneratePublicUrl(storageObject.BucketName(),
-		storageObject.ObjectName(),
-		tempStorageObject.ServiceAccountPrivateKey,
-		tempStorageObject.ServiceAccountEmail, &expirationDateTime)
-	/*if err != nil {
-		return false, fmt.Errorf("Error generating public URL for the Frame Image : , Error:  %v", err)
-	}
-	fmt.Println(frameImagePublicUrl)
-	image := Vision.NewImageFromURI(frameImagePublicUrl)
-
-	fmt.Println(image)
-	if image == nil {
-		return false, fmt.Errorf("error getting Image from Storage URL '%s'", frameImagePublicUrl)
-	}
-
-	props, err := client.DetectSafeSearch(ctx, image, nil)
-	if err != nil {
-		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
-	}
-**/
-	fmt.Println("new func")
-	f, err := os.Open(frameImagePublicUrl)
+func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient) (bool, error) {
+	fmt.Printf("Called with image : %s\n", localPath)
+	f, err := os.Open(localPath)
 	if err != nil {
 		return false, fmt.Errorf("os.Open, Error:  %v", err)
 	}
