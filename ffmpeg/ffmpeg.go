@@ -224,6 +224,7 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
 	}
 **/
+	fmt.Println("new func")
 	f, err := os.Open(frameImagePublicUrl)
 	if err != nil {
 		return false, fmt.Errorf("os.Open, Error:  %v", err)
