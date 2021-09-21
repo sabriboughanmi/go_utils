@@ -106,6 +106,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 //ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
+	fmt.Printf("frames : %d \n",framesToModerateCount)
 	wg := sync.WaitGroup{}
 	var duration float64 = 0
 	errorChannel := make(chan error, framesToModerateCount)
@@ -179,6 +180,9 @@ func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, 
 		return false, fmt.Errorf("NewImageFromReader, Error:  %v", err)
 	}
 	props, err := client.DetectSafeSearch(ctx, image, nil)
+	if err != nil {
+		return false, fmt.Errorf("DetectSafeSearch, Error:  %v", err)
+	}
 	var tolr = protoreflect.EnumNumber(tolerance)
 
 	if props.Adult.Number() > tolr || props.Violence.Number() > tolr {
