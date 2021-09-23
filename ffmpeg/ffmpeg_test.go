@@ -5,9 +5,7 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"io/ioutil"
 	"sync"
 	"testing"
 	"time"
@@ -45,24 +43,8 @@ func duration(msg string, start time.Time) {
 }
 
 func TestModerateVideo(t *testing.T) {
-	storageClient, err := GetStorageClient()
-	if err != nil {
-		t.Errorf("Error - %v", err)
-	}
 
-	jsonKey, err := ioutil.ReadFile(serviceAccountPath)
-	if err != nil {
-		t.Errorf("ioutil.ReadFile: %v", err)
-		return
-	}
-	conf, err := google.JWTConfigFromJSON(jsonKey)
-	if err != nil {
-		t.Errorf("google.JWTConfigFromJSON: %v", err)
-		return
-	}
-
-	var temporaryStorageObject = GetModerateVideoMetadata(storageClient, "tested4you-dev.appspot.com", string(conf.PrivateKey), conf.Email)
-	vid, err := LoadVideo("C:/Users/sabri/Downloads/vd.mp4")
+	vid, err := LoadVideo("C:/Users/T4ULabs/Downloads/vd.mp4")
 	if err != nil {
 		t.Errorf("Error load video  - %v", err)
 	}
@@ -73,7 +55,7 @@ func TestModerateVideo(t *testing.T) {
 
 	defer duration(track("\nModeration Took :"))
 
-	err, ok := vid.ModerateVideo(5, ctx, 3, &temporaryStorageObject, AnnotationClient)
+	err, ok := vid.ModerateVideo(5, ctx, 3,  AnnotationClient)
 	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
