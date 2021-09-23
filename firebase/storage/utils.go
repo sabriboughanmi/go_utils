@@ -2,7 +2,7 @@ package storage
 
 import "sync"
 
-// Handle Goroutine Errors, Wait until either WaitGroup is done or an error is received through the channel
+//HandleGoroutineErrors Wait until either WaitGroup is done or an error is received through the channel
 func HandleGoroutineErrors(wg *sync.WaitGroup, errChan chan error) error {
 	wgDone := make(chan bool)
 	go func() {
