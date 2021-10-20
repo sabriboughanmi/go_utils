@@ -83,7 +83,7 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 	return nil
 }
 
-type FfmpegError error
+type FFmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
 
@@ -243,7 +243,7 @@ func LoadVideo(path string) (*Video, error) {
 	}
 	var desc description
 	if err := json.Unmarshal(out, &desc); err != nil {
-		return nil, errors.New("cinema.Load: unable to parse JSON output " +
+		return nil, errors.New("cinema.vc: unable to parse JSON output " +
 			"from ffprobe: " + err.Error())
 	}
 	if len(desc.Streams) == 0 {
@@ -826,13 +826,19 @@ func (v *EditableVideo) SetSize(width int, height int) {
 	v.additionalArgs = append(v.additionalArgs, fmt.Sprintf("%dx%d", width, height))
 }
 
+// SetStreamable makes the rendered video as Streamable by moving the MetaData to the start of the video.
+func (v *EditableVideo) SetStreamable() {
+	v.additionalArgs = append(v.additionalArgs, "-movflags")
+	v.additionalArgs = append(v.additionalArgs, "faststart")
+}
+
 // SetPreset  defines the Quality Compression and Speed
 func (v *EditableVideo) SetPreset(preset ConversionPreset) {
 	v.additionalArgs = append(v.additionalArgs, "-preset")
 	v.additionalArgs = append(v.additionalArgs, string(preset))
 }
 
-// SetConstantRateFactor The range of the CRF scale is 0–51, where 0 is lossless, 23 is the default, and 51 is worst quality possible. A lower value generally leads to higher quality, and a subjectively sane range is 17–28. Consider 17 or 18 to be visually lossless or nearly so; it should look the same or nearly the same as the input but it isn't technically lossless. The range is exponential, so increasing the CRF value +6 results in roughly half the bitrate / file size, while -6 leads to roughly twice the bitrate. Choose the highest CRF value that still provides an acceptable quality. If the output looks good, then try a higher value. If it looks bad, choose a lower value.
+// SetConstantRateFactor The range of the CRF scale is 0–51, where 0 is lossless, 23 is the default, and 51 is the worst quality possible. A lower value generally leads to higher quality, and a subjectively sane range is 17–28. Consider 17 or 18 to be visually lossless or nearly so; it should look the same or nearly the same as the input but it isn't technically lossless. The range is exponential, so increasing the CRF value +6 results in roughly half the bitrate / file size, while -6 leads to roughly twice the bitrate. Choose the highest CRF value that still provides an acceptable quality. If the output looks good, then try a higher value. If it looks bad, choose a lower value.
 func (v *EditableVideo) SetConstantRateFactor(value int) {
 	v.additionalArgs = append(v.additionalArgs, "-crf")
 	v.additionalArgs = append(v.additionalArgs, strconv.Itoa(value))
