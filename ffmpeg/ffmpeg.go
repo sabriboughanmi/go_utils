@@ -83,6 +83,31 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 	return nil
 }
 
+
+// GetStreamableVersion returns a streamable version
+func (v *Video) GetStreamableVersion(outputPath string ) error {
+	cmds := []string{
+		"ffmpeg",
+		"-y",
+		"-i", v.filepath,
+		"-movflags", "faststart",
+		"-c","copy",
+		outputPath,
+	}
+
+	cmd := exec.Command(cmds[0], cmds[1:]...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = nil
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.New("Video.Render: ffmpeg failed: " + stderr.String())
+	}
+	return nil
+}
+
+
 type FFmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
