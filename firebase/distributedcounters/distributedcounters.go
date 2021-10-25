@@ -269,6 +269,7 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 		firstElementToProcess := 0
 		//Process Shards Queue
 		for i := 0; i < len(shardsInQueue); i++ {
+
 			//Last Shard in Queue
 			if i+1 == len(shardsInQueue) {
 				if moreShardsExists {
@@ -298,6 +299,8 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 			//Shard Parent Changed
 			//Process Shards
 			wg.Add(1)
+			fmt.Println("parallelRollUpShards Executed")
+
 			go parallelRollUpShards(&wg, errorChan, client, ctx, onShardsCompletedUpdate, shardsInQueue[firstElementToProcess:i+1]...)
 			firstElementToProcess = i + 1
 		}
