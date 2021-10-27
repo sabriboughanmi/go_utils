@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	firebase "firebase.google.com/go"
+	"fmt"
 	"google.golang.org/api/option"
 	"sync"
 	"testing"
@@ -42,9 +43,18 @@ func GetStorageClient() (*storage.Client, error) {
 	return StorageClient, err
 }
 
-func TestGeneratePublicUrl(t *testing.T) {
+func TestDeleteFolder(t *testing.T) {
+	appStorage,err := GetStorageClient()
+	if err != nil {
+		fmt.Errorf("error getting storage %v" ,err)
 
+	}
 
+	error :=DeleteFolder("tested4you-dev.appspot.com","testdelete/",appStorage,ctx)
+	if error != nil {
+		fmt.Errorf("error getting storage %v" ,err)
+
+	}
 }
 
 
