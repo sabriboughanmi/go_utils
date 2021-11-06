@@ -309,6 +309,7 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 	return utils.HandleGoroutineErrors(&wg, errorChan)
 }
 
+
 //RollUp all documents Shards relative to the DistributedCounters.ShardName
 func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context) error {
 
@@ -400,6 +401,53 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 			}
 			firstElementToProcess = i + 1
 		}
+	}
+
+	return nil
+}
+
+
+//SingleShardRollUp Collects data from a shard document and updates it's parent document.
+//This function is useful to safely rollup outdated shards. (can't be accessed by the standard functions RollUp, ParallelRollUp )
+func SingleShardRollUp(shardDoc *firestore.DocumentSnapshot, ctx context.Context, onShardsCompletedUpdate onShardsCompletedUpdate) error {
+
+	var shardStructure shardStructure
+	//Collect Data
+	if err := shardDoc.DataTo(&shardStructure); err != nil {
+		return err
+	}
+
+	var valuesToUpdate []firestore.Update
+
+	//Collect incremental Ints
+	for key, value := range shardStructure.Ints {
+		valuesToUpdate = append(valuesToUpdate, firestore.Update{
+			Path:  key,
+			Value: firestore.Increment(value),
+		})
+	}
+
+	//Collect incremental Floats
+	for key, value := range shardStructure.Floats {
+		valuesToUpdate = append(valuesToUpdate, firestore.Update{
+			Path:  key,
+			Value: firestore.Increment(value),
+		})
+	}
+
+	//Skip Update if Values are
+	if len(valuesToUpdate) == 0 {
+		return nil
+	}
+
+	//Update Fields in Parent document
+	if _, err := shardDoc.Ref.Parent.Parent.Update(ctx, valuesToUpdate); err != nil {
+		return err
+	}
+
+	if onShardsCompletedUpdate != nil {
+		//Execute the lambda passed with Shard Document parent  and collected data
+		onShardsCompletedUpdate(shardDoc.Ref.Parent.Parent, shardStructure.Ints, shardStructure.Floats)
 	}
 
 	return nil
