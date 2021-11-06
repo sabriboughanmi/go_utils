@@ -17,7 +17,7 @@ import (
 type onShardsCompletedUpdate func(document *firestore.DocumentRef, int64Updates map[string]int64, float64Updates map[string]float64)
 
 //RollUp Shards of a specific Document,
-//Warning! If an array of DocumentSnapshots is passed with multiple parents the first parent will get updated by all Shards
+//Warning! If an array of DocumentSnapshots are passed with multiple parents the first parent will get updated by all Shards.
 func parallelRollUpShards(waitGroup *sync.WaitGroup, errorChan chan error, client *firestore.Client, ctx context.Context, onShardsCompletedUpdate onShardsCompletedUpdate, shards ...*firestore.DocumentSnapshot) {
 	defer waitGroup.Done()
 
@@ -117,7 +117,8 @@ func parallelRollUpShards(waitGroup *sync.WaitGroup, errorChan chan error, clien
 	return
 }
 
-//RollUp Shards of a specific Document,
+//RollUp Shards of a specific Document.
+//
 //Warning! If an array of DocumentSnapshots is passed with multiple parents the first parent will get updated by all Shards
 func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*firestore.DocumentSnapshot) error {
 	if shards == nil || len(shards) == 0 {
@@ -202,9 +203,12 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	return err
 }
 
-//ParallelRollUp RollUP all documents Shards relative to the DistributedCounters.ShardName
-//This function Executes multiple RollUps in parallel. (parallelDocumentsCount will be multiplied by the ShardCount and used as Query Limiter)
-func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int, onShardsCompletedUpdate onShardsCompletedUpdate) error {
+//ParallelRollUp RollUP all documents Shards relative to the DistributedCounters.ShardName.
+//
+//This function Executes multiple RollUps in parallel. (parallelDocumentsCount will be multiplied by the ShardCount and used as Query Limiter).
+//
+//If filterByTicks == true, Shards creation time will be ignored. (useful to update olf shards)
+func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx context.Context, parallelDocumentsCount int, filterByTicks bool, onShardsCompletedUpdate onShardsCompletedUpdate) error {
 	wg := sync.WaitGroup{}
 
 	//Wait for the execution of RollUps to finish even if some RollUps have failed.
@@ -212,11 +216,16 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 	defer wg.Wait()
 
 	queryLimiter := dc.ShardCount * parallelDocumentsCount
-	currentTick := time.Now().Unix() / dc.RollUpTime
-	ticks := make([]int64, 10)
-	var i int64
-	for i = 0; i < 10; i++ {
-		ticks[i] = currentTick - i
+
+	var ticks []int64
+
+	if filterByTicks{
+		currentTick := time.Now().Unix() / dc.RollUpTime
+		ticks = make([]int64, 10)
+		var i int64
+		for i = 0; i < 10; i++ {
+			ticks[i] = currentTick - i
+		}
 	}
 
 	//Loop Managers
@@ -228,16 +237,19 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 	for moreShardsExists {
 		var query firestore.Query
 		if cursor != nil {
-			query = client.CollectionGroup(dc.ShardName).
-				OrderBy(string(cursorID), firestore.Asc).
-				Where(string(creationTick), "in", ticks).
-				StartAfter(cursor.Data()[string(cursorID)]).
-				Limit(queryLimiter)
+			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
+			//Filter with Ticks
+			if filterByTicks{
+				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
+			}
+			query = query.StartAfter(cursor.Data()[key_shardStructureModel.CursorID]).Limit(queryLimiter)
 		} else {
-			query = client.CollectionGroup(dc.ShardName).
-				OrderBy(string(cursorID), firestore.Asc).
-				Where(string(creationTick), "in", ticks).
-				Limit(queryLimiter)
+			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
+			//Filter with Ticks
+			if filterByTicks{
+				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
+			}
+			query.Limit(queryLimiter)
 		}
 		it := query.Documents(ctx)
 		newShards, err := it.GetAll()
@@ -311,13 +323,16 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 
 
 //RollUp all documents Shards relative to the DistributedCounters.ShardName
-func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context) error {
+func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context,filterByTicks bool) error {
 
-	currentTick := time.Now().Unix() / dc.RollUpTime
-	ticks := make([]int64, 10)
-	var i int64
-	for i = 0; i < 10; i++ {
-		ticks[i] = currentTick - i
+	var ticks []int64
+	if filterByTicks{
+		currentTick := time.Now().Unix() / dc.RollUpTime
+		ticks = make([]int64, 10)
+		var i int64
+		for i = 0; i < 10; i++ {
+			ticks[i] = currentTick - i
+		}
 	}
 
 	//Loop Managers
@@ -328,16 +343,17 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 	for moreShardsExists {
 		var query firestore.Query
 		if cursor != nil {
-			query = client.CollectionGroup(dc.ShardName).
-				OrderBy(string(cursorID), firestore.Asc).
-				Where(string(creationTick), "in", ticks).
-				StartAfter(cursor.Data()[string(cursorID)]).
-				Limit(dc.ShardCount)
+			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
+			if filterByTicks{
+				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
+			}
+			query = query.StartAfter(cursor.Data()[key_shardStructureModel.CursorID]).Limit(dc.ShardCount)
 		} else {
-			query = client.CollectionGroup(dc.ShardName).
-				OrderBy(string(cursorID), firestore.Asc).
-				Where(string(creationTick), "in", ticks).
-				Limit(dc.ShardCount)
+			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
+			if filterByTicks{
+				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
+			}
+			query = query.Limit(dc.ShardCount)
 		}
 		it := query.Documents(ctx)
 		newShards, err := it.GetAll()
@@ -406,10 +422,8 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 	return nil
 }
 
-
-//SingleShardRollUp Collects data from a shard document and updates it's parent document.
-//This function is useful to safely rollup outdated shards. (can't be accessed by the standard functions RollUp, ParallelRollUp )
-func SingleShardRollUp(shardDoc *firestore.DocumentSnapshot, ctx context.Context, onShardsCompletedUpdate onShardsCompletedUpdate) error {
+//ParallelRollUp Collects data from a shard document and updates it's parent document.
+func singleShardRollUp(shardDoc *firestore.DocumentSnapshot, ctx context.Context, onShardsCompletedUpdate onShardsCompletedUpdate) error {
 
 	var shardStructure shardStructure
 	//Collect Data
@@ -540,7 +554,7 @@ func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 	index := 0
 	for key, value := range c.shardFields.Floats {
 		updatedFields[index] = firestore.Update{
-			Path:  _shardStructureKeys.Floats + "." + key,
+			Path:  key_shardStructureModel.Floats + "." + key,
 			Value: firestore.Increment(value),
 		}
 		index++
@@ -548,7 +562,7 @@ func (c *DistributedCounterInstance) UpdateCounters(ctx context.Context, docRef 
 
 	for key, value := range c.shardFields.Ints {
 		updatedFields[index] = firestore.Update{
-			Path:  _shardStructureKeys.Ints + "." + key,
+			Path:  key_shardStructureModel.Ints + "." + key,
 			Value: firestore.Increment(value),
 		}
 		index++
