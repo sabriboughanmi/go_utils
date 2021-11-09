@@ -305,3 +305,4 @@ func DeleteFolder(bucket, folderPath string, client *storage.Client, ctx context
 	return batch.Commit(ctx)
 
 }
+
