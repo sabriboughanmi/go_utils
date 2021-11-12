@@ -8,7 +8,6 @@ import (
 	"os/exec"
 )
 
-
 //LoadVideoFromReEncodedFragmentsIgnoreRotation returns a merged Video that can be operated on.
 //Note! path and Fragments need to be already Existing.
 //Note! this function will ReEncode all videos to fit the lowest resolution and Rotation will be ignored.
