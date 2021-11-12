@@ -55,10 +55,23 @@ func TestModerateVideo(t *testing.T) {
 
 	defer duration(track("\nModeration Took :"))
 
-	err, ok := vid.ModerateVideo(5, ctx, 3,  AnnotationClient)
+	err, ok := vid.ModerateVideo(5, ctx, 3, AnnotationClient)
 	if err != nil {
 		t.Errorf("Error moderate video  - %v", err)
 	}
 
 	fmt.Printf("testting %v", ok)
+}
+
+func TestLoadVideoFromReEncodedFragments(t *testing.T) {
+
+	video, err := LoadVideoFromReEncodedFragments("C:\\Users\\Sabri\\Downloads\\Video\\output.mp4", false,
+		"C:\\Users\\Sabri\\Downloads\\Video\\1.mp4", "C:\\Users\\Sabri\\Downloads\\Video\\2.mp4")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	fmt.Printf("Video duration: %v", video.GetDuration())
 }

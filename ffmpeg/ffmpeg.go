@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
+	utils "github.com/sabriboughanmi/go_utils/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
@@ -83,15 +84,14 @@ func (v *Video) GetThumbnailAtSec(outputPath string, second float64) error {
 	return nil
 }
 
-
 // GetStreamableVersion returns a streamable version
-func (v *Video) GetStreamableVersion(outputPath string ) error {
+func (v *Video) GetStreamableVersion(outputPath string) error {
 	cmds := []string{
 		"ffmpeg",
 		"-y",
 		"-i", v.filepath,
 		"-movflags", "faststart",
-		"-c","copy",
+		"-c", "copy",
 		outputPath,
 	}
 
@@ -106,7 +106,6 @@ func (v *Video) GetStreamableVersion(outputPath string ) error {
 	}
 	return nil
 }
-
 
 type FFmpegError error
 
@@ -131,7 +130,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 //ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
-	fmt.Printf("frames : %d \n",framesToModerateCount)
+	fmt.Printf("frames : %d \n", framesToModerateCount)
 	wg := sync.WaitGroup{}
 	var duration float64 = 0
 	errorChannel := make(chan error, framesToModerateCount)
@@ -383,67 +382,82 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 }
 
 //LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
+//
+//deleteFragments: if enabled will delete the fragments after merging them.
+//
 //Note! path and Fragments need to be already Existing.
-//Note! this function will ReEncode all videos to fit the lowest resolution.
-func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Video, error) {
+//
+//Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
+func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
 
 	if len(fragmentsPath) < 2 {
 		return nil, fmt.Errorf("at least 2 fragments must be passed")
 	}
 
-	importList := `# Fragments Paths`
-	for _, p := range fragmentsPath {
-		importList += fmt.Sprintf("\nfile '%s'", p)
+	wg := sync.WaitGroup{}
+	var errChannel = make(chan error)
+	var tsFragmentsPaths = make([]string, len(fragmentsPath))
+
+
+	for i, fragmentPath := range fragmentsPath {
+		wg.Add(1)
+
+		go func(path string, index int, waitGroup *sync.WaitGroup, errChan chan error) {
+			defer wg.Done()
+			var tsFragmentPath, err = osUtils.CreateTempFile("file.ts", nil)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			cmdline := []string{
+				"ffmpeg",
+				"-y",
+				"-i",
+				path,
+				"-c:v",
+				"libx264",
+				"-preset",
+				"Superfast",
+				"-f",
+				"mpegts",
+				tsFragmentPath,
+			}
+			tsFragmentsPaths[index] = tsFragmentPath
+
+			cmd := exec.Command(cmdline[0], cmdline[1:]...)
+
+			var stderr bytes.Buffer
+			cmd.Stderr = &stderr
+			cmd.Stdout = nil
+
+			if err := cmd.Run(); err != nil {
+				errChan <- err
+				return
+			}
+		}(fragmentPath, i, &wg, errChannel)
 	}
 
-	listPath, err := osUtils.CreateTempFile("list.txt", []byte(importList))
-	if err != nil {
+	if err := utils.HandleGoroutineErrors(&wg, errChannel); err != nil {
 		return nil, err
 	}
-	defer os.Remove(listPath)
+
+	//Concat
+	var tsConcat = fmt.Sprintf("concat:%s", tsFragmentsPaths[0])
+	for i := 1; i < len(tsFragmentsPaths); i++ {
+		tsConcat += "|"
+		tsConcat += tsFragmentsPaths[i]
+	}
+	//tsConcat += "\""
 
 	cmdline := []string{
 		"ffmpeg",
 		"-y",
+		"-i",
+		tsConcat,
+		"-c", "copy",
+		outputPath,
 	}
-
-	//get the lowest video resolution
-	var lowestRes = VideoResolution(8000)
-
-	//Add Inputs
-	for i := 0; i < len(fragmentsPath); i++ {
-		cmdline = append(cmdline, "-i", fragmentsPath[i])
-		video, err := LoadVideo(fragmentsPath[i])
-		if err != nil {
-			return nil, err
-		}
-
-		//Get the Lowest Resolution available, otherwise ffmpeg will throw an error while merging the videos
-		currentVideoRes := video.GetVideoResolution()
-		if lowestRes > currentVideoRes {
-			lowestRes = currentVideoRes
-		}
-	}
-
-	//Construct Fragments Resolutions
-	var filterComplex = ""
-	for i := 0; i < len(fragmentsPath); i++ {
-		filterComplex += fmt.Sprintf("[%d]scale=%d:-2:force_original_aspect_ratio=decrease,setsar=1[v%d];", i, lowestRes, i)
-	}
-
-	for i := 0; i < len(fragmentsPath); i++ {
-		filterComplex += fmt.Sprintf("[v%d][%d:a:0]", i, i)
-	}
-
-	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=1[v][a]", len(fragmentsPath))
-
-	//Add -filter_complex
-	cmdline = append(cmdline, "-filter_complex", filterComplex)
-
-	// Add the Output
-	cmdline = append(cmdline, "-map", "[v]", "-map", "[a]", path)
-
-	//fmt.Println(cmdline)
 
 	cmd := exec.Command(cmdline[0], cmdline[1:]...)
 
@@ -451,188 +465,32 @@ func LoadVideoFromReEncodedFragments(path string, fragmentsPath ...string) (*Vid
 	cmd.Stderr = &stderr
 	cmd.Stdout = nil
 
-	if err = cmd.Run(); err != nil {
-		return nil, fmt.Errorf(stderr.String())
-	}
-	return LoadVideo(path)
-}
+	//Remove generated TS Files
+	defer func() {
+		osUtils.RemovePathsIfExists(tsFragmentsPaths...)
+	}()
 
-//LoadVideoFromReEncodedFragmentsIgnoreRotation returns a merged Video that can be operated on.
-//Note! path and Fragments need to be already Existing.
-//Note! this function will ReEncode all videos to fit the lowest resolution and Rotation will be ignored.
-func LoadVideoFromReEncodedFragmentsIgnoreRotation(path string, fragmentsPath ...string) (*Video, error) {
-
-	//////////////////////////////////////Rotate the Fragment \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-	if len(fragmentsPath) < 2 {
-		return nil, fmt.Errorf("at least 2 fragments must be passed")
-	}
-
-	var noRotationProvided = false
-
-	var rotations = make([]int, len(fragmentsPath))
-	for i, path := range fragmentsPath {
-		video, err := LoadVideo(path)
-		if err != nil {
-			return nil, err
-		}
-		if video.GetVideoRotate() == nil {
-			noRotationProvided = true
-			break
-		}
-		rotations[i] = *video.GetVideoRotate()
-	}
-
-	//Videos do not require rotation
-	if noRotationProvided == true {
-		return LoadVideoFromReEncodedFragments(path, fragmentsPath...)
-	}
-
-	var finalTsFiles []string
-
-	var filesToDelete []string
-	//ffmpeg -i 0.mp4 -c copy -metadata:s:v:0 rotate=0 md_0.mp4
-	for i, fragmentPath := range fragmentsPath {
-
-		originalFragmentPath, err := osUtils.CreateTempFile(fmt.Sprintf("_md_%d.mp4", i), nil)
-		if err != nil {
-			return nil, err
-		}
-		filesToDelete = append(filesToDelete, originalFragmentPath)
-
-		//Construct Command to Rotate the Fragment
-		cmdline := []string{
-			"ffmpeg",
-			"-y",
-			"-i",
-			fragmentPath,
-			"-c",
-			"copy",
-			"-metadata:s:v:0",
-			fmt.Sprintf("rotate=%d", rotations[i]-90),
-			originalFragmentPath,
-		}
-
-		//Execute Command
-		cmd := exec.Command(cmdline[0], cmdline[1:]...)
-
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		cmd.Stdout = nil
-
-		if err = cmd.Run(); err != nil {
-			//Remove files
-			defer osUtils.RemovePathsIfExists(filesToDelete...) //Ignore highlighted Leak as the look will break here with the return statement
-			defer osUtils.RemovePathsIfExists(finalTsFiles...)  //Ignore highlighted Leak as the look will break here with the return statement
-			return nil, fmt.Errorf(stderr.String())
-		}
-
-		//////////////////////////////////////Transpose the Fragment \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-		transposedFragmentPath, err := osUtils.CreateTempFile(fmt.Sprintf("_rt_%d.mp4", i), nil)
-		if err != nil {
-			return nil, err
-		}
-		filesToDelete = append(filesToDelete, transposedFragmentPath)
-
-		//Construct Command to Rotate the Fragment
-		cmdline = []string{
-			"ffmpeg",
-			"-y",
-			"-i",
-			originalFragmentPath,
-			"-vf",
-			"transpose=1",
-			transposedFragmentPath,
-		}
-		//Execute Command
-		cmd = exec.Command(cmdline[0], cmdline[1:]...)
-		cmd.Stderr = &stderr
-		cmd.Stdout = nil
-
-		if err = cmd.Run(); err != nil {
-			//Remove files
-			defer osUtils.RemovePathsIfExists(filesToDelete...) //Ignore highlighted Leak as the look will break here with the return statement
-			defer osUtils.RemovePathsIfExists(finalTsFiles...)  //Ignore highlighted Leak as the look will break here with the return statement
-			return nil, fmt.Errorf(stderr.String())
-		}
-
-		///////////////////////////////////Get Fragment TS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-		TsFragmentPath, err := osUtils.CreateTempFile(fmt.Sprintf("_%d.ts", i), nil)
-		if err != nil {
-			return nil, err
-		}
-		finalTsFiles = append(finalTsFiles, TsFragmentPath)
-		// ffmpeg -i rt_0.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts 0.ts
-		//Construct Command to Rotate the Fragment
-		cmdline = []string{
-			"ffmpeg",
-			"-y",
-			"-i",
-			transposedFragmentPath,
-			"-c",
-			"copy",
-			"-bsf:v",
-			"h264_mp4toannexb",
-			"-f",
-			"mpegts",
-			TsFragmentPath,
-		}
-		//Execute Command
-		cmd = exec.Command(cmdline[0], cmdline[1:]...)
-		cmd.Stderr = &stderr
-		cmd.Stdout = nil
-
-		if err = cmd.Run(); err != nil {
-			//Remove files
-			defer osUtils.RemovePathsIfExists(filesToDelete...) //Ignore highlighted Leak as the look will break here with the return statement
-			defer osUtils.RemovePathsIfExists(finalTsFiles...)  //Ignore highlighted Leak as the look will break here with the return statement
-			return nil, fmt.Errorf(stderr.String())
-		}
-
-	}
-
-	defer osUtils.RemovePathsIfExists(filesToDelete...)
-	defer osUtils.RemovePathsIfExists(finalTsFiles...)
-
-	var concatinatedPaths = "concat:"
-
-	for i, tsPath := range finalTsFiles {
-		if i < len(finalTsFiles)-1 {
-			concatinatedPaths += tsPath + "|"
-		} else {
-			concatinatedPaths += tsPath
-		}
-
-	}
-
-	//Construct Command to Rotate the Fragment
-	cmdline := []string{
-		"ffmpeg",
-		"-y",
-		"-i",
-		concatinatedPaths,
-		"-c",
-		"copy",
-		"-bsf:a",
-		"aac_adtstoasc",
-		path,
-	}
-
-	//Execute Command
-	cmd := exec.Command(cmdline[0], cmdline[1:]...)
-	var stderr2 bytes.Buffer
-	cmd.Stderr = &stderr2
-	cmd.Stdout = nil
 
 	if err := cmd.Run(); err != nil {
-		//Remove files
-		defer osUtils.RemovePathsIfExists(filesToDelete...) //Ignore highlighted Leak as the look will break here with the return statement
-		defer osUtils.RemovePathsIfExists(finalTsFiles...)  //Ignore highlighted Leak as the look will break here with the return statement
-		return nil, fmt.Errorf(stderr2.String())
+		return nil, fmt.Errorf(stderr.String())
 	}
 
-	return LoadVideo(path)
+	return LoadVideo(outputPath)
+}
+
+// executeCommandInBackground executes a command in background.
+func (v *EditableVideo) executeCommandInBackground(command []string, consoleOutput io.Writer) (*exec.Cmd, error) {
+	cmd := exec.Command(command[0], command[1:]...)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = consoleOutput
+
+	err := cmd.Start()
+	if err != nil {
+		return nil, errors.New("Failed to Execute Command with Error : " + stderr.String())
+	}
+	return cmd, nil
 }
 
 //GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
