@@ -381,17 +381,17 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 	return LoadVideo(path)
 }
 
-//LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
+//MergeFragmentsFragments Merges fragments to a specified path.
 //
 //deleteFragments: if enabled will delete the fragments after merging them.
 //
 //Note! path and Fragments need to be already Existing.
 //
 //Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
-func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
+func MergeFragmentsFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) error {
 
 	if len(fragmentsPath) < 2 {
-		return nil, fmt.Errorf("at least 2 fragments must be passed")
+		return fmt.Errorf("at least 2 fragments must be passed")
 	}
 
 	wg := sync.WaitGroup{}
@@ -445,7 +445,7 @@ func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fr
 	}
 
 	if err := utils.HandleGoroutineErrors(&wg, errChannel); err != nil {
-		return nil, err
+		return err
 	}
 
 	//Concat
@@ -477,9 +477,23 @@ func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fr
 	}()
 
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf(stderr.String())
+		return fmt.Errorf(stderr.String())
 	}
 
+	return nil
+}
+
+//LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
+//
+//deleteFragments: if enabled will delete the fragments after merging them.
+//
+//Note! path and Fragments need to be already Existing.
+//
+//Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
+func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
+	if err := MergeFragmentsFragments(outputPath, deleteFragments, fragmentsPath...); err != nil {
+		return nil, err
+	}
 	return LoadVideo(outputPath)
 }
 
