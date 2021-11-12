@@ -398,12 +398,17 @@ func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fr
 	var errChannel = make(chan error)
 	var tsFragmentsPaths = make([]string, len(fragmentsPath))
 
-
 	for i, fragmentPath := range fragmentsPath {
 		wg.Add(1)
 
 		go func(path string, index int, waitGroup *sync.WaitGroup, errChan chan error) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				//Delete Fragment if requested
+				if deleteFragments {
+					osUtils.RemovePathIfExists(path)
+				}
+			}()
 			var tsFragmentPath, err = osUtils.CreateTempFile("file.ts", nil)
 			if err != nil {
 				errChan <- err
@@ -435,6 +440,7 @@ func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fr
 				errChan <- err
 				return
 			}
+
 		}(fragmentPath, i, &wg, errChannel)
 	}
 
@@ -469,7 +475,6 @@ func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fr
 	defer func() {
 		osUtils.RemovePathsIfExists(tsFragmentsPaths...)
 	}()
-
 
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf(stderr.String())
