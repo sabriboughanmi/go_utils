@@ -381,6 +381,8 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 	return LoadVideo(path)
 }
 
+
+
 //MergeFragmentsFragments Merges fragments to a specified path.
 //
 //deleteFragments: if enabled will delete the fragments after merging them.
@@ -490,7 +492,7 @@ func MergeFragmentsFragments(outputPath string, deleteFragments bool, fragmentsP
 //Note! path and Fragments need to be already Existing.
 //
 //Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
-func LoadVideoFromReEncodedFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
+func LoadVideoFromReEncodedFragmentsINPROGRESS(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
 	if err := MergeFragmentsFragments(outputPath, deleteFragments, fragmentsPath...); err != nil {
 		return nil, err
 	}
