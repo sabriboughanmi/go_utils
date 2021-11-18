@@ -6,7 +6,7 @@ const Uint64One uint64 = 1
 const IntOne int = 1
 const ByteOne byte = 1
 
-//////////////////////////////// SetBit \\\\\\\\\\\\\\\\\\\\\\\\\\\\
+///////////////////////////// SetBit \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 //ByteSetBit Sets the bit at pos in the Byte.
 func ByteSetBit(n byte, index uint) byte {
