@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	osUtils "github.com/sabriboughanmi/go_utils/os"
-	utils "github.com/sabriboughanmi/go_utils/utils"
+	"github.com/sabriboughanmi/go_utils/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
@@ -380,8 +380,6 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 
 	return LoadVideo(path)
 }
-
-
 
 //MergeFragmentsFragments Merges fragments to a specified path.
 //
