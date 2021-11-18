@@ -46,14 +46,11 @@ func GetStorageClient() (*storage.Client, error) {
 func TestDeleteFolder(t *testing.T) {
 	appStorage,err := GetStorageClient()
 	if err != nil {
-		fmt.Errorf("error getting storage %v" ,err)
-
+		t.Error(fmt.Errorf("error getting storage %v" ,err))
 	}
 
-	error :=DeleteFolder("tested4you-dev.appspot.com","testdelete/",appStorage,ctx)
-	if error != nil {
-		fmt.Errorf("error getting storage %v" ,err)
-
+	if err =DeleteFolder("tested4you-dev.appspot.com","pages/testdelete/",appStorage,ctx);err != nil {
+		t.Error(fmt.Errorf("error getting storage %v" ,err))
 	}
 }
 

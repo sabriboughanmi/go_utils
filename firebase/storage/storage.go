@@ -287,22 +287,21 @@ func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceA
 func DeleteFolder(bucket, folderPath string, client *storage.Client, ctx context.Context) error{
 	files,err := FilesInFolder(bucket,folderPath,"",client,ctx)
 	if err != nil {
-		fmt.Errorf("error while loading files in folder path %v" ,err)
+		return fmt.Errorf("error while loading files in folder path %v" ,err)
+	}
+
+	if files == nil{
 		return err
 	}
 
 	batch := Batch(client)
 	for _, file := range *files {
+		fmt.Printf("file found : %s\n",file.Name )
 		batch.Delete(bucket, file.Name,func (failError error){
-			fmt.Errorf("error while deleting file , filename: %v , error: %v" ,file.Name,failError)
+			fmt.Printf("error while deleting file , filename: %v , error: %v\n" ,file.Name,failError)
 		})
-		 if err := RemoveFile(bucket, file.Name, client, ctx); err != nil {
-
-			return err
-		}
 	}
 
 	return batch.Commit(ctx)
-
 }
 
