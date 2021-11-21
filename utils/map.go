@@ -23,3 +23,18 @@ func GetValueFromSubMap(dict map[string]interface{}, keyPath string) (interface{
 	return currentMap[keys[len(keys)-1]], nil
 }
 
+
+// MapStringInt is map[string]int with some custom behaviours
+type MapStringInt map[string]int
+
+//MapAppendSum sum the new value with the existing one, if not key exists the new one will be set.
+func (m MapStringInt) MapAppendSum(key string, Value int) {
+	if val, ok := m[key]; ok {
+		m[key] = val + Value
+	} else {
+		m[key] = Value
+	}
+}
+
+
+
