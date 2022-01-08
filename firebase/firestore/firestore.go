@@ -7,6 +7,11 @@ func (firestoreUpdates *FirestoreUpdatesQueue) AddCommand(command FirestoreUpdat
 	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command)
 }
 
+//AddCommands adds FirestoreUpdateCommands to the Queue
+func (firestoreUpdates *FirestoreUpdatesQueue) AddCommands(command ...FirestoreUpdateCommand) {
+	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command...)
+}
+
 //Merge fetch all FirestoreUpdateCommand(s) from passed FirestoreUpdatesQueue(s)
 func (firestoreUpdates *FirestoreUpdatesQueue) Merge(queues ...FirestoreUpdatesQueue) {
 	for _, queue := range queues {
