@@ -55,6 +55,11 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 				return
 			}
 
+			if fetchCommand.AsTypePtr == nil {
+				errChan <- fmt.Errorf("AsTypePtr is passed as null")
+				return
+			}
+
 			if err = userSnapshot.DataTo(fetchCommand.AsTypePtr); err != nil {
 				errChan <- err
 				return
