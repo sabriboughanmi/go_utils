@@ -15,9 +15,7 @@ func HandleGoroutineErrors(wg *sync.WaitGroup, errChan chan error) error {
 	case <-wgDone:
 		return nil
 	case err := <-errChan:
-		close(errChan)
+		//close(errChan)
 		return err
 	}
 }
-
-
