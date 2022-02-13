@@ -51,8 +51,19 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 
 			userSnapshot, err := ffcq.Client.Collection(fetchCommand.Collection).Doc(fetchCommand.DocumentID).Get(ffcq.Context)
 			if err != nil {
-				errChan <- err
-				return
+				//handle the fetch error
+				if fetchCommand.FetchCommandErrorHandler != nil {
+					//Handle the error
+					if unhandledError := fetchCommand.FetchCommandErrorHandler(fetchCommand.AsTypePtr, err); unhandledError != nil {
+						errChan <- unhandledError
+						return
+					}
+					//handled Error
+					err = nil
+				} else {
+					errChan <- err
+					return
+				}
 			}
 
 			if fetchCommand.AsTypePtr == nil {
