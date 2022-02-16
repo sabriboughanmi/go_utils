@@ -58,8 +58,8 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 						errChan <- unhandledError
 						return
 					}
-					//handled Error
-					err = nil
+					//handled Error but no conversion required as no documents are found
+					return
 				} else {
 					errChan <- err
 					return
