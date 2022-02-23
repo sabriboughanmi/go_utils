@@ -15,7 +15,7 @@ func (r *RateLimiter) Start() {
 	r.running = true
 	go func() {
 		for range r.ticker.C {
-			r.chanBlocker <- nil
+			//r.chanBlocker <- nil
 			if r.running == false {
 				return
 			}
@@ -31,10 +31,10 @@ func (r *RateLimiter) Stop() {
 
 //Wait must be called before any rate limited API Call
 func (r *RateLimiter) Wait() {
-	 if !r.running{
-	 	panic("RateLimiter need to be running in order to wait for it")
-	 }
-	<- r.chanBlocker
+	if !r.running {
+		panic("RateLimiter need to be running in order to wait for it")
+	}
+	<-r.chanBlocker
 }
 
 //CreateLimiter returns a RateLimiter which can be used to rate limit any process operations.
@@ -54,7 +54,7 @@ func CreateLimiter(requestInterval time.Duration, burstCount int, requestsCount 
 	}
 	//fill chanBlocker with free operations to prevent waiting for burst calls.
 	if burstCount > 0 {
-		go func(){
+		go func() {
 			for i := 0; i < burstCount; i++ {
 				rateLimiter.chanBlocker <- nil
 			}
