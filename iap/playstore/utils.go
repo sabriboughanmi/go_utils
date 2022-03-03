@@ -1,6 +1,9 @@
 package playstore
 
-import "context"
+import (
+	"context"
+	"google.golang.org/api/androidpublisher/v3"
+)
 
 // GetProduct : Gets an in-app product, which can be a managed product or a subscription.
 //  - packageName: Package name of the app.
@@ -10,9 +13,22 @@ func (c *Client) GetProduct(ctx context.Context, packageName string, productID s
 	return &InAppProduct{iap}, err
 }
 
-//func (c *Client) ConvertRegionPrices(ctx context.Context, packageName string, productID string, inAppProduct InAppProduct) (*InAppProduct, error) {
-//
-//	c.service.
-//
-//	return &InAppProduct{iap}, err
-//}
+// DefaultPriceToMoney .
+func DefaultPriceToMoney(currency string, priceMicros string) *androidpublisher.Money {
+	return &androidpublisher.Money{
+		CurrencyCode:    currency,
+		Nanos:           0,
+		Units:           0,
+		ForceSendFields: nil,
+		NullFields:      nil,
+	}
+}
+
+//ConvertRegionPrices : Calculates the region prices, using today's exchange rate and country-specific pricing patterns, based on the price in the request for a set of regions.
+func (c *Client) ConvertRegionPrices(ctx context.Context, packageName string, price *androidpublisher.Money) (*androidpublisher.ConvertRegionPricesResponse, error) {
+	monetizationService := androidpublisher.NewMonetizationService(c.service)
+	convertRegionPricesRequest := &androidpublisher.ConvertRegionPricesRequest{
+		Price: price,
+	}
+	return monetizationService.ConvertRegionPrices(packageName, convertRegionPricesRequest).Context(ctx).Do()
+}

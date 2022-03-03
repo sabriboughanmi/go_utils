@@ -4,8 +4,8 @@ package playstore
 //	ProductStatus_Unspecified // Unspecified status.
 //	ProductStatus_active // The product is published and active in the store.
 //	ProductStatus_inactive // The product is not published and therefore inactive in the store.
-func (iap InAppProduct) GetStatus() EProductStatus {
-	return EProductStatus(iap.AndroidPublisherInAppProduct.Status)
+func (inAppProduct InAppProduct) GetStatus() EProductStatus {
+	return EProductStatus(inAppProduct.AndroidPublisherInAppProduct.Status)
 }
 
 //GetSubscriptionPeriod : specifies the Subscription period.
@@ -15,14 +15,14 @@ func (iap InAppProduct) GetStatus() EProductStatus {
 //	SubscriptionPeriod_ThreeMonths (three months).
 //	SubscriptionPeriod_SixMonths (six months).
 //	SubscriptionPeriod_OneYear (one year).
-func (iap InAppProduct) GetSubscriptionPeriod() ESubscriptionPeriod {
-	return ESubscriptionPeriod(iap.AndroidPublisherInAppProduct.SubscriptionPeriod)
+func (inAppProduct InAppProduct) GetSubscriptionPeriod() ESubscriptionPeriod {
+	return ESubscriptionPeriod(inAppProduct.AndroidPublisherInAppProduct.SubscriptionPeriod)
 }
 
 //GetPurchaseType : The type of the product.
 //	EPurchaseType_Unspecified (Unspecified purchase type).
 //	EPurchaseType_ManagedUser Can be purchased Single/Multiple times (Consumable,Non-Consumable).
 //	EPurchaseType_Subscription (In-app product with a recurring period).
-func (iap InAppProduct) GetPurchaseType() EPurchaseType {
-	return EPurchaseType(iap.AndroidPublisherInAppProduct.PurchaseType)
+func (inAppProduct InAppProduct) GetPurchaseType() EPurchaseType {
+	return EPurchaseType(inAppProduct.AndroidPublisherInAppProduct.PurchaseType)
 }
