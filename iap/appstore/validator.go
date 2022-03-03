@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen  -destination=mocks/appstore.go -package=mocks github.com/awa/go-iap/appstore IAPClient
+////go:generate mockgen  -destination=mocks/appstore.go -package=mocks github.com/awa/go-iap/appstore IAPClient
 
 const (
 	// SandboxURL is the endpoint for sandbox environment.
