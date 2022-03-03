@@ -3,6 +3,7 @@ package playstore
 import (
 	"context"
 	"google.golang.org/api/androidpublisher/v3"
+	"strconv"
 )
 
 // GetProduct : Gets an in-app product, which can be a managed product or a subscription.
@@ -14,14 +15,20 @@ func (c *Client) GetProduct(ctx context.Context, packageName string, productID s
 }
 
 // DefaultPriceToMoney .
-func DefaultPriceToMoney(currency string, priceMicros string) *androidpublisher.Money {
+func DefaultPriceToMoney(currency string, priceMicros string) (*androidpublisher.Money, error) {
+
+	priceMicrosInt64, err := strconv.ParseInt(priceMicros, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
 	return &androidpublisher.Money{
 		CurrencyCode:    currency,
-		Nanos:           0,
+		Nanos:           priceMicrosInt64 * 1000,
 		Units:           0,
 		ForceSendFields: nil,
 		NullFields:      nil,
-	}
+	}, nil
 }
 
 //ConvertRegionPrices : Calculates the region prices, using today's exchange rate and country-specific pricing patterns, based on the price in the request for a set of regions.
