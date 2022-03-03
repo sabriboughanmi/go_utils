@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sabriboughanmi/go_utils/iap/playstore/androidpublisher/v3"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
 )
 
