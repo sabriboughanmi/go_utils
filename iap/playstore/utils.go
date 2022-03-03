@@ -9,3 +9,10 @@ func (c *Client) GetProduct(ctx context.Context, packageName string, productID s
 	var iap, err = c.service.Inappproducts.Get(packageName, productID).Context(ctx).Do()
 	return &InAppProduct{iap}, err
 }
+
+//func (c *Client) ConvertRegionPrices(ctx context.Context, packageName string, productID string, inAppProduct InAppProduct) (*InAppProduct, error) {
+//
+//	c.service.
+//
+//	return &InAppProduct{iap}, err
+//}
