@@ -14,14 +14,12 @@ func (c *Client) GetProduct(ctx context.Context, packageName string, productID s
 	return &InAppProduct{iap}, err
 }
 
-// DefaultPriceToMoney .
+// DefaultPriceToMoney converts price parameters to androidpublisher.Money struct, so it can be used with ConvertRegionPrices function.
 func DefaultPriceToMoney(currency string, priceMicros string) (*androidpublisher.Money, error) {
-
 	priceMicrosInt64, err := strconv.ParseInt(priceMicros, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-
 	return &androidpublisher.Money{
 		CurrencyCode:    currency,
 		Nanos:           priceMicrosInt64 * 1000,
