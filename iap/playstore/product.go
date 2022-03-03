@@ -2,7 +2,7 @@ package playstore
 
 import (
 	"context"
-	"google.golang.org/api/androidpublisher/v3"
+	"github.com/sabriboughanmi/go_utils/iap/playstore/androidpublisher"
 )
 
 // VerifyProduct verifies product status

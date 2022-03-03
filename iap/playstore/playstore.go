@@ -13,9 +13,9 @@ import (
 
 	"google.golang.org/api/option"
 
+	"github.com/sabriboughanmi/go_utils/iap/playstore/androidpublisher"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/androidpublisher/v3"
 )
 
 // New returns http client which includes the credentials to access androidpublisher API.
