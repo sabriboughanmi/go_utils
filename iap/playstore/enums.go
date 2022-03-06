@@ -29,3 +29,25 @@ const (
 	EPurchaseType_ManagedUser  EPurchaseType = "managedUser"             // The default product type - Can be purchased Single/Multiple times (Consumable,Non-Consumable).
 	EPurchaseType_Subscription EPurchaseType = "subscription"            // In-app product with a recurring period.
 )
+
+type EAcknowledgementState int64
+
+const (
+	AcknowledgementState_YetToBeAcknowledged EAcknowledgementState = 0
+	AcknowledgementState_Acknowledged        EAcknowledgementState = 1
+)
+
+type EConsumptionState int64
+
+const (
+	ConsumptionState_YetToBeConsumed EConsumptionState = 0
+	ConsumptionState_Consumed        EConsumptionState = 1
+)
+
+type EPurchaseState int64
+
+const (
+	PurchaseState_Purchased EPurchaseState = 0
+	PurchaseState_Canceled  EPurchaseState = 1
+	PurchaseState_Pending   EPurchaseState = 1
+)

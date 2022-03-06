@@ -5,11 +5,11 @@ import (
 	"google.golang.org/api/androidpublisher/v3"
 )
 
-// VerifyProduct verifies product status
-func (c *Client) VerifyProduct(ctx context.Context, packageName string, productID string, token string) (*androidpublisher.ProductPurchase, error) {
+// VerifyProduct returns a ProductPurchase.
+func (c *Client) VerifyProduct(ctx context.Context, packageName string, productID string, token string) (*ProductPurchase, error) {
 	ps := androidpublisher.NewPurchasesProductsService(c.service)
 	result, err := ps.Get(packageName, productID, token).Context(ctx).Do()
-	return result, err
+	return &ProductPurchase{ProductPurchase: result}, err
 }
 
 //AcknowledgeProduct : Acknowledges a purchase of an inapp item.

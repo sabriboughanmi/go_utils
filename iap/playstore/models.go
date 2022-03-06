@@ -29,3 +29,8 @@ type Client struct {
 type InAppProduct struct {
 	AndroidPublisherInAppProduct *androidpublisher.InAppProduct
 }
+
+// The ProductPurchase : contains the *androidpublisher.ProductPurchase and provides some utils.
+type ProductPurchase struct {
+	ProductPurchase *androidpublisher.ProductPurchase
+}
