@@ -11,7 +11,7 @@ func RandFloat32(min, max float32, seed int64) float32 {
 }
 
 //PeekRandomElement peeks a random element from a set of win rates percentages.
-func PeekRandomElement(percentages ...float32) int {
+func PeekRandomElement(percentages []float32) int {
 
 	var totalPoints float32 = 0
 
