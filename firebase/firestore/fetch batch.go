@@ -73,7 +73,7 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 			}
 
 			//Force document ReEncoding.
-			if fetchCommand.ForceReEncoding == nil || *fetchCommand.ForceReEncoding == false {
+			if fetchCommand.ForceReEncoding {
 				data, err := json.Marshal(documentSnapshot.Data())
 				if err != nil {
 					errChan <- err

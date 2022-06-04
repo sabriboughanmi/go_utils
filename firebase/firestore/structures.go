@@ -32,7 +32,7 @@ type FetchCommand struct {
 	AsTypePtr                interface{}
 	FetchCommandErrorHandler FetchCommandErrorHandler
 	// Force document ReEncoding.it's useful for firestore document complex conversions, but comes with a little performance impact.
-	ForceReEncoding *bool
+	ForceReEncoding bool
 }
 
 type firestoreFetchBatch struct {
