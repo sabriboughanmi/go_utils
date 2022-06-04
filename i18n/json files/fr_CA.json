@@ -1,0 +1,14 @@
+{
+  "likeVideo": "a aimé votre video.",
+  "followingYou": "a commencé à vous suivre.",
+  "approvedVideo": "Votre vidéo a été approuvée.",
+  "rejectedVideo": "Votre vidéo a été rejetée.",
+  "bannedVideo": "Votre vidéo a été banni.",
+  "approvedPage": "Votre page a été approuvée.",
+  "bannedPage": "Votre page a été rejetée.",
+  "likeComment": "a aimé votre commentaire.",
+  "writeComment": "vous a écrit un commentaire.",
+  "repliedComment": "a répondu à votre commentaire.",
+  "review": "a laissé un avis sur votre page.",
+  "referralLink": "a rejoint tested4you via votre lien de parrainage"
+}

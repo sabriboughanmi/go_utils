@@ -3,6 +3,7 @@ package firestore
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"encoding/json"
 	"fmt"
 	utils "github.com/sabriboughanmi/go_utils/utils"
 	"sync"
@@ -49,7 +50,7 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 		go func(fetchCommand FetchCommand, waitGroup *sync.WaitGroup, errChan chan error) {
 			defer waitGroup.Done()
 
-			userSnapshot, err := ffcq.Client.Collection(fetchCommand.Collection).Doc(fetchCommand.DocumentID).Get(ffcq.Context)
+			documentSnapshot, err := ffcq.Client.Collection(fetchCommand.Collection).Doc(fetchCommand.DocumentID).Get(ffcq.Context)
 			if err != nil {
 				//handle the fetch error
 				if fetchCommand.FetchCommandErrorHandler != nil {
@@ -71,10 +72,24 @@ func (ffcq *firestoreFetchBatch) Commit() error {
 				return
 			}
 
-			if err = userSnapshot.DataTo(fetchCommand.AsTypePtr); err != nil {
-				errChan <- err
-				return
+			//Force document ReEncoding.
+			if fetchCommand.ForceReEncoding == nil || *fetchCommand.ForceReEncoding == false {
+				data, err := json.Marshal(documentSnapshot.Data())
+				if err != nil {
+					errChan <- err
+					return
+				}
+				if err = json.Unmarshal(data, fetchCommand.AsTypePtr); err != nil {
+					errChan <- err
+					return
+				}
+			} else {
+				if err = documentSnapshot.DataTo(fetchCommand.AsTypePtr); err != nil {
+					errChan <- err
+					return
+				}
 			}
+
 		}(command, &wg, errChannel)
 	}
 
