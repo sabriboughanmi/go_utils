@@ -22,6 +22,8 @@ const (
 	VideoMP4  FileContentType = "video/mp4"
 	VideoMOV  FileContentType = "video/mov"
 	VideoAVI  FileContentType = "video/avi"
+	FilePDG  FileContentType = "file/pdf"
+
 )
 
 
