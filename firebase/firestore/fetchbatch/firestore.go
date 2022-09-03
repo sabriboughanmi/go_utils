@@ -1,4 +1,4 @@
-package firestore
+package fetchbatch
 
 import "cloud.google.com/go/firestore"
 

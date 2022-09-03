@@ -1,4 +1,4 @@
-module github.com/sabriboughanmi/go_utils/firebase/firestore
+module github.com/sabriboughanmi/go_utils/firebase/firestore/fetchbatch
 
 go 1.16
 
