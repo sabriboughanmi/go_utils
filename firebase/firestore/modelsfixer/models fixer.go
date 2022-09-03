@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+//TODO: make it Dynamic, so people can create their own safety Tags and add their handlers functions.
+
 //processField process models fields.
 func processField(val interface{}, tags reflect.StructTag) (interface{}, bool) {
 	valT := reflect.TypeOf(val)
