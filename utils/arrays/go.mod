@@ -1,3 +1,3 @@
-module github.com/sabriboughanmi/go_utils/math/arrays
+module github.com/sabriboughanmi/go_utils/utils/arrays
 
 go 1.16
