@@ -5,10 +5,25 @@ import (
 	"context"
 )
 
+type EQueryOperator string
+
+const (
+	QueryOperator_LessThan             EQueryOperator = "<"
+	QueryOperator_LessThanOrEqualTo    EQueryOperator = "<="
+	QueryOperator_EqualTo              EQueryOperator = "=="
+	QueryOperator_GreaterThan          EQueryOperator = ">"
+	QueryOperator_GreaterThanOrEqualTo EQueryOperator = ">="
+	QueryOperator_NotEqualTo           EQueryOperator = "!="
+	QueryOperator_ArrayContains        EQueryOperator = "array-contains"
+	QueryOperator_ArrayContainsAny     EQueryOperator = "array-contains-any"
+	QueryOperator_In                   EQueryOperator = "in"
+	QueryOperator_NotIn                EQueryOperator = "not-in"
+)
+
 // QueryWhere defines a single Where instruction Parameter.
 type QueryWhere struct {
 	Path  string
-	Op    string
+	Op    EQueryOperator
 	Value interface{}
 }
 

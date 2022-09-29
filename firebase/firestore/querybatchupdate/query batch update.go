@@ -18,23 +18,29 @@ func CreateContentBatchUpdateInstance(firestoreClient *firestore.Client, ctx con
 
 }
 
+// Where adds a Where condition to the query
+func (contentBatchUpdate *ContentBatchUpdate) Where(path string, operation EQueryOperator, value interface{}) *ContentBatchUpdate {
+	contentBatchUpdate.querySearchParams.QueryWhereKeys = append(contentBatchUpdate.querySearchParams.QueryWhereKeys, QueryWhere{
+		Path:  path,
+		Op:    operation,
+		Value: value,
+	})
+	return contentBatchUpdate
+}
+
+// Sort adds a Sort condition to the query
+func (contentBatchUpdate *ContentBatchUpdate) Sort(documentSortKey string, direction firestore.Direction) *ContentBatchUpdate {
+	contentBatchUpdate.querySearchParams.QuerySorts = append(contentBatchUpdate.querySearchParams.QuerySorts, QuerySort{
+		DocumentSortKey: documentSortKey,
+		Direction:       direction,
+	})
+	return contentBatchUpdate
+}
+
 // SetSearchParameters sets the Search Parameters
-func (contentBatchUpdate *ContentBatchUpdate) SetSearchParameters(collectionID string, queryWhereKeys []QueryWhere, querySorts ...QuerySort) {
+func (contentBatchUpdate *ContentBatchUpdate) SetSearchParameters(collectionID string) {
+
 	contentBatchUpdate.querySearchParams.CollectionID = collectionID
-	if queryWhereKeys == nil || len(queryWhereKeys) == 0 {
-		panic("queryWhereKeys is empty or nil")
-	}
-	contentBatchUpdate.querySearchParams.QueryWhereKeys = queryWhereKeys
-
-	if querySorts != nil {
-		var querySortsLength = len(querySorts)
-		//declare the QuerySorts slice in advance for performance reasons
-		contentBatchUpdate.querySearchParams.QuerySorts = make([]QuerySort, querySortsLength)
-		for i, querySort := range querySorts {
-			contentBatchUpdate.querySearchParams.QuerySorts[i] = querySort
-		}
-	}
-
 }
 
 // SetPaginationParameters sets the Pagination Parameters
@@ -73,7 +79,7 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 	//Declare the Query with where conditions
 	for _, whereCondition := range contentBatchUpdate.querySearchParams.QueryWhereKeys {
-		query.Where(whereCondition.Path, whereCondition.Op, whereCondition.Value)
+		query.Where(whereCondition.Path, string(whereCondition.Op), whereCondition.Value)
 	}
 
 	// Declare the Query OrderBy (if required)
