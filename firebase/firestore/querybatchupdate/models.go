@@ -35,14 +35,8 @@ type QuerySort struct {
 
 // QueryPaginationParams Defines the Pagination parameters
 type QueryPaginationParams struct {
-	Limit      *int
+	Limit      int
 	BatchCount int
-}
-
-// ValueToUpdate Defines a document single value to Update.
-type ValueToUpdate struct {
-	Key   string
-	Value interface{}
 }
 
 // QuerySearchParams defines search parameters for an UpdateContentInBatch
@@ -58,5 +52,5 @@ type ContentBatchUpdate struct {
 	ctx                   context.Context
 	querySearchParams     QuerySearchParams
 	queryPaginationParams QueryPaginationParams
-	valuesToUpdate        []ValueToUpdate
+	firestoreUpdates      []firestore.Update
 }
