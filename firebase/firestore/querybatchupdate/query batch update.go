@@ -84,7 +84,7 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		query.Where(whereCondition.Path, string(whereCondition.Op), whereCondition.Value)
 	}
 
-	// Declare the Query OrderBy (if required)
+	// Declare the Query OrderBy
 	if contentBatchUpdate.querySearchParams.QuerySorts != nil {
 		for _, orderBy := range contentBatchUpdate.querySearchParams.QuerySorts {
 			query.OrderBy(orderBy.DocumentSortKey, orderBy.Direction)
@@ -95,7 +95,7 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 	for documentsAvailable {
 
-		//Make sure that limit doesn't exeed the batchCount
+		//Make sure that limit doesn't exceed the batchCount
 		if (contentBatchUpdate.queryPaginationParams.Limit - processedDocuments) < contentBatchUpdate.queryPaginationParams.BatchCount {
 			contentBatchUpdate.queryPaginationParams.BatchCount = contentBatchUpdate.queryPaginationParams.Limit - processedDocuments
 		}
@@ -129,13 +129,16 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 			lastDoc = newDoc
 			modifiedDocsCount++
 			processedDocuments++
-			//TODO: Make sure the WriteBatch never exceeds the 500 document updates in a batch.
-			if modifiedDocsCount < 500 {
-				firestoreWriteBatch.Commit(contentBatchUpdate.ctx)
+			// Make sure the WriteBatch never exceeds the 500 document updates in a batch.
+			if modifiedDocsCount == 500 {
 				firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
+				if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
+					return fmt.Errorf("error Commiting Batch when updating posts %v", err)
+				}
 				processedDocuments++
 				modifiedDocsCount = 0
 			}
+
 			//Set the Updates
 			firestoreWriteBatch.Update(newDoc.Ref, contentBatchUpdate.firestoreUpdates)
 		}
@@ -143,22 +146,35 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		if modifiedDocsCount < contentBatchUpdate.queryPaginationParams.BatchCount {
 			documentsAvailable = false
 		}
-		var querySort QuerySort
-		if modifiedDocsCount > 0 {
-			cValue, err := utils.GetValueFromSubMap(lastDoc.Data(), querySort.DocumentSortKey)
-			if err != nil {
-				return err
-			}
-			cursorValue = cValue
 
+		//If batch contains operations but no more are available
+		if modifiedDocsCount > 0 && !documentsAvailable {
 			if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
 				return fmt.Errorf("error Commiting Batch when updating posts %v", err)
 			}
+			modifiedDocsCount = 0
 		}
+		//returns last document's at orderkey
+		if contentBatchUpdate.querySearchParams.QuerySorts != nil {
+			for _, orderKeys := range contentBatchUpdate.querySearchParams.QuerySorts {
+				var orderKey = orderKeys.DocumentSortKey
+				if modifiedDocsCount > 0 {
+					cValue, err := utils.GetValueFromSubMap(lastDoc.Data(), orderKey)
+					if err != nil {
+						return err
+					}
+					cursorValue = cValue
 
+					if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
+						return fmt.Errorf("error Commiting Batch when updating posts %v", err)
+					}
+				}
+			}
+		}
 		if contentBatchUpdate.queryPaginationParams.Limit != 0 && processedDocuments >= contentBatchUpdate.queryPaginationParams.Limit {
 			return nil
 		}
 	}
+
 	return nil
 }
