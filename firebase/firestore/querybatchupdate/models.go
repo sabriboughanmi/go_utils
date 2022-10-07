@@ -1,9 +1,12 @@
-package querybatchupdate
+package updatedocumentaftermodifytest
 
 import (
 	"cloud.google.com/go/firestore"
 	"context"
 )
+
+//DocumentUpdateFunction gives the user a document from the ContentBatchUpdate in order to handle its custom logic.
+type DocumentUpdateFunction func(documentSnapshot *firestore.DocumentSnapshot) error
 
 type EQueryOperator string
 
@@ -35,7 +38,6 @@ type QuerySort struct {
 
 // QueryPaginationParams Defines the Pagination parameters
 type QueryPaginationParams struct {
-	Limit      int
 	BatchCount int
 }
 
@@ -48,9 +50,11 @@ type QuerySearchParams struct {
 
 // ContentBatchUpdate contains Parameters for a content Batch Update Operation
 type ContentBatchUpdate struct {
-	firestoreClient       *firestore.Client
-	ctx                   context.Context
-	querySearchParams     QuerySearchParams
-	queryPaginationParams QueryPaginationParams
-	firestoreUpdates      []firestore.Update
+	firestoreClient        *firestore.Client
+	ctx                    context.Context
+	querySearchParams      QuerySearchParams
+	queryPaginationParams  QueryPaginationParams
+	firestoreUpdates       []firestore.Update
+	AsTypePtr              interface{}
+	DocumentUpdateFunction DocumentUpdateFunction
 }

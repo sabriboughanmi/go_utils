@@ -1,10 +1,10 @@
-package querybatchupdate
+package updatedocumentaftermodifytest
 
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"fmt"
 	"github.com/sabriboughanmi/go_utils/utils"
+	"log"
 )
 
 // CreateContentBatchUpdateInstance returns a new Content Batch Update instance
@@ -43,9 +43,8 @@ func (contentBatchUpdate *ContentBatchUpdate) Collection(collectionID string) *C
 }
 
 // Pagination sets the Pagination Parameters
-func (contentBatchUpdate *ContentBatchUpdate) Pagination(limit int, batchCount int) *ContentBatchUpdate {
+func (contentBatchUpdate *ContentBatchUpdate) Pagination(batchCount int) *ContentBatchUpdate {
 	contentBatchUpdate.queryPaginationParams = QueryPaginationParams{
-		Limit:      limit,
 		BatchCount: batchCount,
 	}
 
@@ -73,9 +72,6 @@ func (contentBatchUpdate *ContentBatchUpdate) ValuesToUpdate(valuesToUpdate ...f
 // UpdateContentInBatch used to update User Generated Contents display name when the username has changed
 func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 	var documentsAvailable = true
-	var cursorValue interface{} = nil
-
-	var processedDocuments = 0
 
 	var query = contentBatchUpdate.firestoreClient.Collection(contentBatchUpdate.querySearchParams.CollectionID)
 
@@ -84,6 +80,8 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		query.Where(whereCondition.Path, string(whereCondition.Op), whereCondition.Value)
 	}
 
+	var cursorValue interface{} = nil
+
 	// Declare the Query OrderBy
 	if contentBatchUpdate.querySearchParams.QuerySorts != nil {
 		for _, orderBy := range contentBatchUpdate.querySearchParams.QuerySorts {
@@ -91,90 +89,105 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		}
 	}
 	//Declare the query limits
-	query.Limit(contentBatchUpdate.queryPaginationParams.Limit)
+	query.Limit(contentBatchUpdate.queryPaginationParams.BatchCount)
+
+	var firestoreWriteBatch *firestore.WriteBatch
+	var operationInWriteBatch = 0
+	var lastDoc *firestore.DocumentSnapshot
+
+	fetchBatchRequired := contentBatchUpdate.firestoreUpdates != nil && len(contentBatchUpdate.firestoreUpdates) > 0
 
 	for documentsAvailable {
-
-		//Make sure that limit doesn't exceed the batchCount
-		if (contentBatchUpdate.queryPaginationParams.Limit - processedDocuments) < contentBatchUpdate.queryPaginationParams.BatchCount {
-			contentBatchUpdate.queryPaginationParams.BatchCount = contentBatchUpdate.queryPaginationParams.Limit - processedDocuments
+		//The WriteBatch is only required if the firestore static updates are required
+		if fetchBatchRequired {
+			firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
 		}
 
 		//Set a new Cursor if a fetch has already been processed in previous iterations
 		if cursorValue != nil {
 			query.StartAfter(cursorValue)
+			log.Println("docs", cursorValue)
 		}
-
 		//Fetch all documents in parallel
-		downloadedDocuments, err := query.Documents(contentBatchUpdate.ctx).GetAll()
+		downloadedDocumentsSnapShots, err := query.Documents(contentBatchUpdate.ctx).GetAll()
+
 		if err != nil {
 			return err
 		}
-
 		//No documents to update
-		if downloadedDocuments == nil || len(downloadedDocuments) == 0 {
+		if downloadedDocumentsSnapShots == nil || len(downloadedDocumentsSnapShots) == 0 {
 			return nil
 		}
+		lastDoc = downloadedDocumentsSnapShots[len(downloadedDocumentsSnapShots)-1]
 
-		//No more documents available to fetch
-		if len(downloadedDocuments) < contentBatchUpdate.queryPaginationParams.Limit {
+		//Check if Documents still available to query in next iteration
+		if len(downloadedDocumentsSnapShots) < contentBatchUpdate.queryPaginationParams.BatchCount {
 			documentsAvailable = false
 		}
+		//set cursor if required
+		if documentsAvailable {
+			if contentBatchUpdate.querySearchParams.QuerySorts != nil {
+				if len(contentBatchUpdate.querySearchParams.QuerySorts) > 1 {
+					if cursorValue == nil {
 
-		var firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
-		var modifiedDocsCount = 0
-		var lastDoc *firestore.DocumentSnapshot
-		for _, newDoc := range downloadedDocuments {
+						cursorValue = make([]interface{}, len(contentBatchUpdate.querySearchParams.QuerySorts))
+					}
 
-			lastDoc = newDoc
-			modifiedDocsCount++
-			processedDocuments++
-			// Make sure the WriteBatch never exceeds the 500 document updates in a batch.
-			if modifiedDocsCount == 500 {
-				firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
-				if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
-					return fmt.Errorf("error Commiting Batch when updating posts %v", err)
+					multipleValue := cursorValue.([]interface{})
+					for i, orderKeys := range contentBatchUpdate.querySearchParams.QuerySorts {
+						value, err := utils.GetValueFromSubMap(lastDoc.Data(), orderKeys.DocumentSortKey)
+						if err != nil {
+							return err
+						}
+						multipleValue[i] = value
+
+						if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
+							return err
+						}
+					}
+					cursorValue = multipleValue
+				} else {
+					cursorValue = lastDoc.Data()[contentBatchUpdate.querySearchParams.QuerySorts[0].DocumentSortKey]
 				}
-				processedDocuments++
-				modifiedDocsCount = 0
+				log.Println("cursorvalue", cursorValue)
+
 			}
-
-			//Set the Updates
-			firestoreWriteBatch.Update(newDoc.Ref, contentBatchUpdate.firestoreUpdates)
+		}
+		//Update with write Batch
+		processWithWriteBatch(contentBatchUpdate, &operationInWriteBatch, firestoreWriteBatch, downloadedDocumentsSnapShots)
+		//Update with lambda function
+		if contentBatchUpdate.DocumentUpdateFunction != nil {
+			processWithCustomBehaviour(contentBatchUpdate, lastDoc)
 		}
 
-		if modifiedDocsCount < contentBatchUpdate.queryPaginationParams.BatchCount {
-			documentsAvailable = false
-		}
+	}
+	return nil
+}
+func processWithWriteBatch(contentBatchUpdate *ContentBatchUpdate, writeBatchCachedOperations *int, firestoreWriteBatch *firestore.WriteBatch, downloadedDocuments []*firestore.DocumentSnapshot) error {
+	for _, newDoc := range downloadedDocuments {
+		*writeBatchCachedOperations++
+		log.Println("downloaded_documents", downloadedDocuments)
+		//Set the Updates
+		firestoreWriteBatch.Update(newDoc.Ref, contentBatchUpdate.firestoreUpdates)
 
-		//If batch contains operations but no more are available
-		if modifiedDocsCount > 0 && !documentsAvailable {
+		// Make sure the WriteBatch never exceeds the 500 document updates in a batch.
+		if *writeBatchCachedOperations == 500 {
+			*writeBatchCachedOperations = 0
 			if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
-				return fmt.Errorf("error Commiting Batch when updating posts %v", err)
+				return err
 			}
-			modifiedDocsCount = 0
+			firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
 		}
-		//returns last document's at orderkey
-		if contentBatchUpdate.querySearchParams.QuerySorts != nil {
-			for _, orderKeys := range contentBatchUpdate.querySearchParams.QuerySorts {
-				var orderKey = orderKeys.DocumentSortKey
-				if modifiedDocsCount > 0 {
-					cValue, err := utils.GetValueFromSubMap(lastDoc.Data(), orderKey)
-					if err != nil {
-						return err
-					}
-					cursorValue = cValue
 
-					if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
-						return fmt.Errorf("error Commiting Batch when updating posts %v", err)
-					}
-				}
-			}
-		}
-		if contentBatchUpdate.queryPaginationParams.Limit != 0 && processedDocuments >= contentBatchUpdate.queryPaginationParams.Limit {
-			return nil
+	}
+	return nil
+}
+
+func processWithCustomBehaviour(contentBatchUpdate *ContentBatchUpdate, downloadedDocuments *firestore.DocumentSnapshot) {
+	if contentBatchUpdate.DocumentUpdateFunction != nil {
+		if err := contentBatchUpdate.DocumentUpdateFunction(downloadedDocuments); err != nil {
+			return
 		}
 	}
 
-	return nil
 }
