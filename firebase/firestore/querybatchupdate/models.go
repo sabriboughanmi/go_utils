@@ -56,5 +56,8 @@ type ContentBatchUpdate struct {
 	queryPaginationParams  QueryPaginationParams
 	firestoreUpdates       []firestore.Update
 	AsTypePtr              interface{}
+	documentSnapshot       []*firestore.DocumentSnapshot
 	DocumentUpdateFunction DocumentUpdateFunction
+	// Force document ReEncoding.it's useful for firestore document complex conversions, but comes with a little performance impact.
+	ForceReEncoding bool
 }
