@@ -3,6 +3,8 @@ package updatedocumentaftermodifytest
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/sabriboughanmi/go_utils/utils"
 	"log"
 )
@@ -72,7 +74,7 @@ func (contentBatchUpdate *ContentBatchUpdate) ValuesToUpdate(valuesToUpdate ...f
 // UpdateContentInBatch used to update User Generated Contents display name when the username has changed
 func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 	var documentsAvailable = true
-
+	//var updateDocumentWithLambda = contentBatchUpdate.DocumentUpdateFunction
 	var query = contentBatchUpdate.firestoreClient.Collection(contentBatchUpdate.querySearchParams.CollectionID)
 
 	//Declare the Query with where conditions
@@ -90,8 +92,6 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 	}
 	//Declare the query limits
 	query.Limit(contentBatchUpdate.queryPaginationParams.BatchCount)
-	query.Offset(20)
-
 	var firestoreWriteBatch *firestore.WriteBatch
 	var operationInWriteBatch = 500
 	var processedDocuments = 0
@@ -131,8 +131,6 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		//Set a new Cursor if a fetch has already been processed in previous iterations
 		if cursorValue != nil {
 			query.StartAfter(cursorValue)
-			log.Println("cursorvalue", cursorValue)
-
 		}
 		//set cursor if required
 		if documentsAvailable {
@@ -164,10 +162,15 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 			}
 		}
-		//Update with write Batch
-		processWithWriteBatch(contentBatchUpdate, &operationInWriteBatch, firestoreWriteBatch, downloadedDocumentsSnapShots)
-		//Update with lambda function
-		//processWithCustomBehaviour(contentBatchUpdate, lastDoc)
+		//update with lambda function
+		if contentBatchUpdate.DocumentUpdateFunction != nil {
+			processWithCustomBehaviour(contentBatchUpdate, lastDoc, contentBatchUpdate.DocumentUpdateFunction)
+
+		} else {
+			//update with writebatch
+			processWithWriteBatch(contentBatchUpdate, &operationInWriteBatch, firestoreWriteBatch, downloadedDocumentsSnapShots)
+		}
+
 		break
 	}
 	return nil
@@ -192,11 +195,28 @@ func processWithWriteBatch(contentBatchUpdate *ContentBatchUpdate, writeBatchCac
 	return nil
 }
 
-func processWithCustomBehaviour(contentBatchUpdate *ContentBatchUpdate, downloadedDocuments *firestore.DocumentSnapshot) {
-	if contentBatchUpdate.DocumentUpdateFunction != nil {
-		if err := contentBatchUpdate.DocumentUpdateFunction(downloadedDocuments); err != nil {
-			return
+func processWithCustomBehaviour(contentBatchUpdate *ContentBatchUpdate, downloadedDocuments *firestore.DocumentSnapshot, updateDoc DocumentUpdateFunction) error {
+	if err := updateDoc(downloadedDocuments); err != nil {
+		return err
+	}
+
+	if contentBatchUpdate.documentSnapshot == nil {
+		fmt.Errorf("documentSnapshot is passed as null")
+		return nil
+	}
+	if downloadedDocuments != nil {
+		data, err := json.Marshal(downloadedDocuments.Data())
+		if err != nil {
+			return err
+		}
+		if err = json.Unmarshal(data, contentBatchUpdate.documentSnapshot); err != nil {
+			return err
+		}
+	} else {
+		if err := downloadedDocuments.DataTo(contentBatchUpdate.documentSnapshot); err != nil {
+			return err
 		}
 	}
+	return nil
 
 }
