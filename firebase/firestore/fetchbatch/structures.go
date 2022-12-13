@@ -35,7 +35,7 @@ type FetchCommand struct {
 	ForceReEncoding bool
 }
 
-type firestoreFetchBatch struct {
+type FirestoreFetchBatch struct {
 	CommandsQueue []FetchCommand
 	Client        *firestore.Client
 	Context       context.Context

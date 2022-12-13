@@ -1,4 +1,4 @@
-package updatedocumentaftermodifytest
+package querybatchupdate
 
 import (
 	"cloud.google.com/go/firestore"
@@ -25,27 +25,27 @@ const (
 
 // QueryWhere defines a single Where instruction Parameter.
 type QueryWhere struct {
-	Path  string
-	Op    EQueryOperator
-	Value interface{}
+	Path  string         `json:"p"`
+	Op    EQueryOperator `json:"o"`
+	Value interface{}    `json:"v"`
 }
 
 // QuerySort defines a single Sort instruction Parameter.
 type QuerySort struct {
-	DocumentSortKey string
-	Direction       firestore.Direction
+	DocumentSortKey string              `json:"dsk"`
+	Direction       firestore.Direction `json:"d"`
 }
 
 // QueryPaginationParams Defines the Pagination parameters
 type QueryPaginationParams struct {
-	BatchCount int
+	BatchCount int `json:"bc"`
 }
 
 // QuerySearchParams defines search parameters for an UpdateContentInBatch
 type QuerySearchParams struct {
-	CollectionID   string
-	QueryWhereKeys []QueryWhere
-	QuerySorts     []QuerySort
+	CollectionID   string       `json:"cid"`
+	QueryWhereKeys []QueryWhere `json:"qwk"`
+	QuerySorts     []QuerySort  `json:"qs"`
 }
 
 // ContentBatchUpdate contains Parameters for a content Batch Update Operation
@@ -55,9 +55,15 @@ type ContentBatchUpdate struct {
 	querySearchParams      QuerySearchParams
 	queryPaginationParams  QueryPaginationParams
 	firestoreUpdates       []firestore.Update
-	AsTypePtr              interface{}
-	documentSnapshot       []*firestore.DocumentSnapshot
 	DocumentUpdateFunction DocumentUpdateFunction
 	// Force document ReEncoding.it's useful for firestore document complex conversions, but comes with a little performance impact.
 	ForceReEncoding bool
+}
+
+// ContentBatchUpdateSerialized contains serialized Parameters for a content Batch Update Operation
+type ContentBatchUpdateSerialized struct {
+	QuerySearchParams     QuerySearchParams     `json:"qsp"`
+	QueryPaginationParams QueryPaginationParams `json:"qpp"`
+	FirestoreUpdates      []firestore.Update    `json:"fu"`
+	ForceReEncoding       bool                  `json:"fr"`
 }

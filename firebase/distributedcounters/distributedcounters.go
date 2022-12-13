@@ -219,7 +219,7 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 
 	var ticks []int64
 
-	if filterByTicks{
+	if filterByTicks {
 		currentTick := time.Now().Unix() / dc.RollUpTime
 		ticks = make([]int64, 10)
 		var i int64
@@ -239,14 +239,14 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 		if cursor != nil {
 			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
 			//Filter with Ticks
-			if filterByTicks{
+			if filterByTicks {
 				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
 			}
 			query = query.StartAfter(cursor.Data()[key_shardStructureModel.CursorID]).Limit(queryLimiter)
 		} else {
 			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
 			//Filter with Ticks
-			if filterByTicks{
+			if filterByTicks {
 				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
 			}
 			query.Limit(queryLimiter)
@@ -321,12 +321,11 @@ func (dc *DistributedCounters) ParallelRollUp(client *firestore.Client, ctx cont
 	return utils.HandleGoroutineErrors(&wg, errorChan)
 }
 
-
 //RollUp all documents Shards relative to the DistributedCounters.ShardName
-func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context,filterByTicks bool) error {
+func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Context, filterByTicks bool) error {
 
 	var ticks []int64
-	if filterByTicks{
+	if filterByTicks {
 		currentTick := time.Now().Unix() / dc.RollUpTime
 		ticks = make([]int64, 10)
 		var i int64
@@ -344,13 +343,13 @@ func (dc *DistributedCounters) RollUp(client *firestore.Client, ctx context.Cont
 		var query firestore.Query
 		if cursor != nil {
 			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
-			if filterByTicks{
+			if filterByTicks {
 				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
 			}
 			query = query.StartAfter(cursor.Data()[key_shardStructureModel.CursorID]).Limit(dc.ShardCount)
 		} else {
 			query = client.CollectionGroup(dc.ShardName).OrderBy(key_shardStructureModel.CursorID, firestore.Asc)
-			if filterByTicks{
+			if filterByTicks {
 				query = query.Where(key_shardStructureModel.CreationTick, "in", ticks)
 			}
 			query = query.Limit(dc.ShardCount)

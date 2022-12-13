@@ -5,13 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	utils "github.com/sabriboughanmi/go_utils/utils"
+	"github.com/sabriboughanmi/go_utils/utils"
 	"sync"
 )
 
 //GetFirestoreFetchBatch returns a firestore fetch batch
-func GetFirestoreFetchBatch(Client *firestore.Client, context context.Context) firestoreFetchBatch {
-	return firestoreFetchBatch{
+func GetFirestoreFetchBatch(Client *firestore.Client, context context.Context) FirestoreFetchBatch {
+	return FirestoreFetchBatch{
 		CommandsQueue: nil,
 		Client:        Client,
 		Context:       context,
@@ -19,17 +19,17 @@ func GetFirestoreFetchBatch(Client *firestore.Client, context context.Context) f
 }
 
 //AddCommand adds a FetchCommand to the Queue
-func (ffcq *firestoreFetchBatch) AddCommand(command FetchCommand) {
+func (ffcq *FirestoreFetchBatch) AddCommand(command FetchCommand) {
 	ffcq.CommandsQueue = append(ffcq.CommandsQueue, command)
 }
 
 //AddCommands adds multiple FetchCommand to the Queue
-func (ffcq *firestoreFetchBatch) AddCommands(commands ...FetchCommand) {
+func (ffcq *FirestoreFetchBatch) AddCommands(commands ...FetchCommand) {
 	ffcq.CommandsQueue = append(ffcq.CommandsQueue, commands...)
 }
 
 //Commit fetches all commands in the Queue
-func (ffcq *firestoreFetchBatch) Commit() error {
+func (ffcq *FirestoreFetchBatch) Commit() error {
 	//Check initialization
 	if ffcq.Client == nil || ffcq.Context == nil || ffcq.CommandsQueue == nil {
 		return fmt.Errorf("Not initialized error. ")
