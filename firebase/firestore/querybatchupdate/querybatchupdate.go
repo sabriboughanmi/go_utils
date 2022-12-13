@@ -106,25 +106,10 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 	var documentsAvailable = true
 
-	//var updateDocumentWithLambda = contentBatchUpdate.DocumentUpdateFunction
-	var query = contentBatchUpdate.firestoreClient.Collection(contentBatchUpdate.querySearchParams.CollectionID)
-
-	//Declare the Query with where conditions
-	for _, whereCondition := range contentBatchUpdate.querySearchParams.QueryWhereKeys {
-		query.Where(whereCondition.Path, string(whereCondition.Op), whereCondition.Value)
-	}
+	//construct a query from ContentBatchUpdate params.
+	var query = contentBatchUpdate.constructQuery()
 
 	var cursorValue interface{} = nil
-
-	// Declare the Query OrderBy
-	if contentBatchUpdate.querySearchParams.QuerySorts != nil {
-		for _, orderBy := range contentBatchUpdate.querySearchParams.QuerySorts {
-			query.OrderBy(orderBy.DocumentSortKey, orderBy.Direction)
-		}
-	}
-
-	//Declare the query limits
-	query.Limit(contentBatchUpdate.queryPaginationParams.BatchCount)
 
 	var firestoreWriteBatch *firestore.WriteBatch
 	var operationInWriteBatch = 0
@@ -160,7 +145,7 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 		//Set a new Cursor if a fetch has already been processed in previous iterations
 		if cursorValue != nil {
-			query.StartAfter(cursorValue)
+			query = query.StartAfter(cursorValue)
 		}
 
 		//set cursor if more documents can be fetched.
