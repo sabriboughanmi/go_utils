@@ -125,7 +125,6 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 		}
 		//Fetch all documents in parallel
 		downloadedDocumentsSnapShots, err := query.Documents(contentBatchUpdate.ctx).GetAll()
-
 		if err != nil {
 			return err
 		}
@@ -143,14 +142,8 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 			documentsAvailable = false
 		}
 
-		//Set a new Cursor if a fetch has already been processed in previous iterations
-		if cursorValue != nil {
-			query = query.StartAfter(cursorValue)
-		}
-
 		//set cursor if more documents can be fetched.
 		if documentsAvailable {
-
 			if contentBatchUpdate.querySearchParams.QuerySorts != nil {
 				if len(contentBatchUpdate.querySearchParams.QuerySorts) > 1 {
 					if cursorValue == nil {
@@ -179,6 +172,11 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 				}
 
 			}
+		}
+
+		//Set a new Cursor if a fetch has already been processed in previous iterations
+		if cursorValue != nil {
+			query = query.StartAfter(cursorValue)
 		}
 
 		//update with lambda function
@@ -214,9 +212,17 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 
 				}
 			}
+
+			//if no documents available but some operations are still in queue
+			if !documentsAvailable && operationInWriteBatch > 0 {
+				if _, err := firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
+					return err
+				}
+			}
+
 		}
 
-		break
 	}
+
 	return nil
 }
