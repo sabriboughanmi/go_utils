@@ -288,8 +288,6 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 			//construct a structuredQuery request body.
 			requestBody := []byte(fmt.Sprintf(`{"structuredQuery":%s}`, string(structuredQueryBodyBytes)))
 
-			//fmt.Println(string(requestBody))
-
 			//Response model
 			type Object struct {
 				Document struct {

@@ -40,11 +40,29 @@ func asFirestoreValue(v interface{}) (*firestore.Value, error) {
 	switch kind {
 	case reflect.Bool:
 		firestoreValue.BooleanValue = v.(bool)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int:
+		firestoreValue.IntegerValue = int64(v.(int))
+	case reflect.Int8:
+		firestoreValue.IntegerValue = int64(v.(int8))
+	case reflect.Int16:
+		firestoreValue.IntegerValue = int64(v.(int16))
+	case reflect.Int32:
+		firestoreValue.IntegerValue = int64(v.(int32))
+	case reflect.Int64:
 		firestoreValue.IntegerValue = v.(int64)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint:
+		firestoreValue.IntegerValue = int64(v.(uint))
+	case reflect.Uint8:
+		firestoreValue.IntegerValue = int64(v.(uint8))
+	case reflect.Uint16:
+		firestoreValue.IntegerValue = int64(v.(uint16))
+	case reflect.Uint32:
+		firestoreValue.IntegerValue = int64(v.(uint32))
+	case reflect.Uint64:
 		firestoreValue.IntegerValue = int64(v.(uint64))
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
+		firestoreValue.DoubleValue = float64(v.(float32))
+	case reflect.Float64:
 		firestoreValue.DoubleValue = v.(float64)
 	case reflect.String:
 		firestoreValue.StringValue = v.(string)
@@ -265,7 +283,7 @@ func createSingleFilter(queryWhere QueryWhere) (*firestore.Filter, error) {
 			Field: &firestore.FieldReference{
 				FieldPath: queryWhere.Path,
 			},
-			Op:    string(queryWhere.Op),
+			Op:    structuredQueryOperator[queryWhere.Op],
 			Value: value,
 		},
 	}, nil

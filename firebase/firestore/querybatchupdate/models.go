@@ -21,6 +21,19 @@ const (
 	QueryOperator_NotIn                EQueryOperator = "not-in"
 )
 
+var structuredQueryOperator = map[EQueryOperator]string{
+	QueryOperator_LessThan:             "LESS_THAN",
+	QueryOperator_LessThanOrEqualTo:    "LESS_THAN_OR_EQUAL",
+	QueryOperator_EqualTo:              "EQUAL",
+	QueryOperator_GreaterThan:          "GREATER_THAN",
+	QueryOperator_GreaterThanOrEqualTo: "GREATER_THAN_OR_EQUAL",
+	QueryOperator_NotEqualTo:           "NOT_EQUAL",
+	QueryOperator_ArrayContains:        "ARRAY_CONTAINS",
+	QueryOperator_ArrayContainsAny:     "ARRAY_CONTAINS_ANY",
+	QueryOperator_In:                   "IN",
+	QueryOperator_NotIn:                "NOT_IN",
+}
+
 // QueryWhere defines a single Where instruction Parameter.
 type QueryWhere struct {
 	Path  string         `json:"p"`
