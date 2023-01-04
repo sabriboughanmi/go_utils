@@ -9,16 +9,16 @@ import (
 type EQueryOperator string
 
 const (
-	QueryOperator_LessThan             EQueryOperator = "<"
-	QueryOperator_LessThanOrEqualTo    EQueryOperator = "<="
-	QueryOperator_EqualTo              EQueryOperator = "=="
-	QueryOperator_GreaterThan          EQueryOperator = ">"
-	QueryOperator_GreaterThanOrEqualTo EQueryOperator = ">="
-	QueryOperator_NotEqualTo           EQueryOperator = "!="
-	QueryOperator_ArrayContains        EQueryOperator = "array-contains"
-	QueryOperator_ArrayContainsAny     EQueryOperator = "array-contains-any"
-	QueryOperator_In                   EQueryOperator = "in"
-	QueryOperator_NotIn                EQueryOperator = "not-in"
+	QueryOperator_LessThan             EQueryOperator = "LESS_THAN"
+	QueryOperator_LessThanOrEqualTo    EQueryOperator = "LESS_THAN_OR_EQUAL"
+	QueryOperator_EqualTo              EQueryOperator = "EQUAL"
+	QueryOperator_GreaterThan          EQueryOperator = "GREATER_THAN"
+	QueryOperator_GreaterThanOrEqualTo EQueryOperator = "GREATER_THAN_OR_EQUAL"
+	QueryOperator_NotEqualTo           EQueryOperator = "NOT_EQUAL"
+	QueryOperator_ArrayContains        EQueryOperator = "ARRAY_CONTAINS"
+	QueryOperator_ArrayContainsAny     EQueryOperator = "ARRAY_CONTAINS_ANY"
+	QueryOperator_In                   EQueryOperator = "IN"
+	QueryOperator_NotIn                EQueryOperator = "NOT_IN"
 )
 
 // QueryWhere defines a single Where instruction Parameter.
