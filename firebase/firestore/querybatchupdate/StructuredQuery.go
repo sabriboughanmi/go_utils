@@ -152,9 +152,27 @@ func (contentBatchUpdate *ContentBatchUpdate) createStructuredQuery() (*firestor
 		OrderBy: createOrderBy(contentBatchUpdate.querySearchParams.QuerySorts),
 		Offset:  contentBatchUpdate.querySearchParams.Offset,
 		Select: &firestore.Projection{
-			Fields: []*firestore.FieldReference{
-				{FieldPath: "__name__"},
-			},
+			Fields: func() []*firestore.FieldReference {
+
+				//Return the Default documentID
+				if contentBatchUpdate.querySearchParams.SelectFields == nil || len(contentBatchUpdate.querySearchParams.SelectFields) == 0 {
+					return []*firestore.FieldReference{
+						{FieldPath: "__name__"},
+					}
+				}
+				//Init the selected fields slice
+				var fieldsToSelect = make([]*firestore.FieldReference, len(contentBatchUpdate.querySearchParams.SelectFields)+1)
+
+				//Set the first element
+				fieldsToSelect[0] = &firestore.FieldReference{FieldPath: "__name__"}
+
+				//Set the Other Fields
+				for i, fieldPath := range contentBatchUpdate.querySearchParams.SelectFields {
+					fieldsToSelect[i+1] = &firestore.FieldReference{FieldPath: fieldPath}
+				}
+
+				return fieldsToSelect
+			}(),
 		},
 		StartAt: nil,
 		EndAt:   nil,

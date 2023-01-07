@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 )
 
 //constructQuery creates a Query from ContentBatchUpdate data.
@@ -69,4 +70,14 @@ func (contentBatchUpdate *ContentBatchUpdate) postRequestWithGoogleSignedHttpCli
 		return err
 	}
 	return nil
+}
+
+//GetDocumentID returns the current DocumentID
+func (firestorePartialSnapshot *FirestorePartialSnapshot) GetDocumentID() string {
+	return filepath.Base(firestorePartialSnapshot.Document.DocumentFullPath)
+}
+
+//GetDocumentRef returns a *firestore.DocumentRef, to facilitate hierarchy access.
+func (firestorePartialSnapshot *FirestorePartialSnapshot) GetDocumentRef(client *firestore.Client) *firestore.DocumentRef {
+	return client.Doc(firestorePartialSnapshot.Document.DocumentFullPath)
 }

@@ -4,9 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/firestore/apiv1/firestorepb"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/sabriboughanmi/go_utils/utils"
 	"net/http"
 	"path/filepath"
 	"sync"
@@ -29,6 +27,7 @@ func CreateContentBatchUpdateInstance(firestoreClient *firestore.Client, signedH
 
 }
 
+/*
 //Serialize a ContentBatchUpdate Instance Data.
 func (contentBatchUpdate *ContentBatchUpdate) Serialize() string {
 	var serializedQuery = ContentBatchUpdateSerialized{
@@ -54,6 +53,7 @@ func (contentBatchUpdate *ContentBatchUpdate) Deserialize(serializeQuery string)
 	contentBatchUpdate.ForceReEncoding = serializedQuery.ForceReEncoding
 	return nil
 }
+*/
 
 // Where adds a Where condition to the query
 func (contentBatchUpdate *ContentBatchUpdate) Where(path string, operation EQueryOperator, value interface{}) *ContentBatchUpdate {
@@ -102,7 +102,13 @@ func (contentBatchUpdate *ContentBatchUpdate) SetQueryLimit(limit uint) *Content
 
 // Select sets the Query Documents fields that must be downloaded Parameter
 func (contentBatchUpdate *ContentBatchUpdate) Select(fields ...string) *ContentBatchUpdate {
-	contentBatchUpdate.querySearchParams.SelectFields = fields
+
+	if contentBatchUpdate.querySearchParams.SelectFields == nil {
+		contentBatchUpdate.querySearchParams.SelectFields = fields
+	} else {
+		contentBatchUpdate.querySearchParams.SelectFields = append(contentBatchUpdate.querySearchParams.SelectFields, fields...)
+	}
+
 	return contentBatchUpdate
 }
 
@@ -222,7 +228,14 @@ func (contentBatchUpdate *ContentBatchUpdate) DeleteDocument(collectionID string
 	return contentBatchUpdate
 }
 
-//TODO: Error in Goroutines and Sub-Goroutines
+// SubscribeToContentBatchUpdates will be executed in parallel for every ContentBatchUpdate providing the Data processed by the Batch.
+//the BatchCallback will only be executed if the WriteBatch Operation has succeeded
+func (contentBatchUpdate *ContentBatchUpdate) SubscribeToContentBatchUpdates(callback BatchCallback) *ContentBatchUpdate {
+	contentBatchUpdate.callback = callback
+	return contentBatchUpdate
+}
+
+//TODO: Handle Error in Goroutines and Sub-Goroutines
 
 // UpdateContentInBatch used to update User Generated Contents display name when the username has changed
 func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
@@ -240,7 +253,7 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 	start := time.Now()
 
 	//Get Documents count
-	var res, err = query.NewAggregationQuery().WithCount("__name__").Get(contentBatchUpdate.ctx)
+	var res, err = query.NewAggregationQuery().WithCount(firestore.DocumentID).Get(contentBatchUpdate.ctx)
 	if err != nil {
 		return err
 	}
@@ -288,25 +301,29 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 			//construct a structuredQuery request body.
 			requestBody := []byte(fmt.Sprintf(`{"structuredQuery":%s}`, string(structuredQueryBodyBytes)))
 
-			//Response model
-			type Object struct {
-				Document struct {
-					Name string `json:"name"`
-				} `json:"document"`
-			}
-
 			//Request firestore Rest API for a StructuredQuery.
-			var objects []Object
-			if err = contentBatchUpdate.postRequestWithGoogleSignedHttpClient(requestBody, &objects); err != nil {
+			var partialSnapshots []FirestorePartialSnapshot
+			if err = contentBatchUpdate.postRequestWithGoogleSignedHttpClient(requestBody, &partialSnapshots); err != nil {
 				fmt.Printf("%v", err)
 				return
 			}
 
+			//Filter out all skip elements that firestore adds
+			for i, ps := range partialSnapshots {
+				if ps.Document.DocumentFullPath != "" {
+					partialSnapshots = partialSnapshots[i:]
+					break
+				}
+			}
+
 			var collectionUpdateWG sync.WaitGroup
+
+			//Iterate over the Collections that require modifications
 			for collection, batchOperations := range contentBatchUpdate.batchOperations {
 
 				collectionUpdateWG.Add(1)
-				go func(fCollection string, operation *BatchOperation, collectionsWG *sync.WaitGroup) {
+
+				go func(fCollection string, operation *BatchOperation, firestorePartialSnapshots []FirestorePartialSnapshot, collectionsWG *sync.WaitGroup) {
 					defer collectionsWG.Done()
 
 					//Create a new firestore WriteBatch
@@ -316,20 +333,20 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 					var collectionReference = contentBatchUpdate.firestoreClient.Collection(fCollection)
 
 					//Execute the lambda function
-					for _, doc := range objects {
+					for _, doc := range firestorePartialSnapshots {
 						//skip (firestore skipped documents objects)
-						if doc.Document.Name == "" {
+						if doc.Document.DocumentFullPath == "" {
 							continue
 						}
 
 						switch operation.OperationType {
 						case BatchOperationType_Update:
 							//Add an Update operation
-							firestoreWriteBatch.Update(collectionReference.Doc(filepath.Base(doc.Document.Name)), operation.FirestoreUpdate)
+							firestoreWriteBatch.Update(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)), operation.FirestoreUpdate)
 							break
 						case BatchOperationType_Delete:
 							//Add a Delete operation
-							firestoreWriteBatch.Delete(collectionReference.Doc(filepath.Base(doc.Document.Name)))
+							firestoreWriteBatch.Delete(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)))
 							break
 						default:
 							panic("unsupported BatchOperationType")
@@ -343,7 +360,12 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 						return
 					}
 
-				}(collection, &batchOperations, &collectionUpdateWG)
+					// Run the CallBack if set
+					if contentBatchUpdate.callback != nil {
+						contentBatchUpdate.callback(firestorePartialSnapshots)
+					}
+
+				}(collection, &batchOperations, partialSnapshots, &collectionUpdateWG)
 			}
 			//Wait the Collections Updates
 			collectionUpdateWG.Wait()

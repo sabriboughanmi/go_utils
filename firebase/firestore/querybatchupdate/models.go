@@ -67,6 +67,7 @@ type ContentBatchUpdate struct {
 	firestoreClient        *firestore.Client
 	ctx                    context.Context
 	signedHttpClient       *http.Client
+	callback               BatchCallback
 	apiEndPoint            string
 	querySearchParams      QuerySearchParams
 	queryPaginationParams  QueryPaginationParams
@@ -98,3 +99,14 @@ type BatchOperation struct {
 	OperationType   EBatchOperationType `json:"ot"`
 	FirestoreUpdate []firestore.Update  `json:"fu,omitempty"`
 }
+
+//FirestorePartialSnapshot stores a firestore Rest API Firestore Snapshot data
+type FirestorePartialSnapshot struct {
+	Document struct {
+		DocumentFullPath string          `json:"name"`
+		Fields           firestoreFields `json:"fields"`
+	} `json:"document"`
+}
+
+//BatchCallback is used to provide the data passed to the ContentBatchUpdate and process custom behaviors
+type BatchCallback func(partialSnapshots []FirestorePartialSnapshot)
