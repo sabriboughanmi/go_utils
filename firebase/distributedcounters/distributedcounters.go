@@ -95,21 +95,37 @@ func parallelRollUpShards(waitGroup *sync.WaitGroup, errorChan chan error, clien
 		return
 	}
 
-	//Update Fields in Parent document
+	var parentDocRef = shards[0].Ref.Parent.Parent
 
-	if _, err := shards[0].Ref.Parent.Parent.Update(ctx, valuesToUpdate); err != nil {
-		fmt.Printf("Error Updating Parent: %v \n", err)
-		errorChan <- err
-		return
-	}
+	//Add Parent.Document update to the write batch
+	batch.Update(parentDocRef, valuesToUpdate)
 
 	//Delete Shards
 	if _, err := batch.Commit(ctx); err != nil {
+
+		//Parent Document does not exist anymore
+		if status.Code(err) == codes.NotFound {
+			//Clear all Sharda and omit parent document update
+			batch = client.Batch()
+
+			for _, shardDocRef := range shards {
+				batch.Delete(shardDocRef.Ref)
+			}
+
+			//Commit Shards delete operations
+			if _, err := batch.Commit(ctx); err != nil {
+				errorChan <- err
+				return
+			}
+			return
+		}
+
 		fmt.Printf("Error batch.Commit: %v \n", err)
 		errorChan <- err
 		return
 	}
 
+	//all shards are updates successfully
 	if onShardsCompletedUpdate != nil {
 		onShardsCompletedUpdate(shards[0].Ref.Parent.Parent, incrementalIntFields, incrementalFloatFields)
 	}
