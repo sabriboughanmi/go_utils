@@ -3,8 +3,6 @@ package storage
 import (
 	"cloud.google.com/go/storage"
 	"context"
-	"fmt"
-	"github.com/sabriboughanmi/go_utils/utils"
 	"sync"
 )
 
@@ -33,26 +31,23 @@ type addOperationMetaData struct {
 }
 
 type deleteOperationMetaData struct {
-	bucket string
-	name   string
-	onFailure    onFailureCallback
-
+	bucket    string
+	name      string
+	onFailure onFailureCallback
 }
 
 type renameOperationMetaData struct {
 	srcBucket string
-	srcName string
-	dstName string
-	onFailure    onFailureCallback
-
+	srcName   string
+	dstName   string
+	onFailure onFailureCallback
 }
 type moveOperationMetaData struct {
 	srcBucket string
 	dstBucket string
 	srcName   string
 	dstName   string
-	onFailure    onFailureCallback
-
+	onFailure onFailureCallback
 }
 
 type storageBatch struct {
@@ -66,8 +61,8 @@ func Batch(storageClient *storage.Client) storageBatch {
 }
 
 //Add appends a storage file creation from local to the batch.
-func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fileMetaData map[string]string, onFailure onFailureCallback) {
-	wb.operations = append(wb.operations, operation{
+func (storageWriteBatch *storageBatch) Add(bucket string, fileName string, localPath string, fileMetaData map[string]string, onFailure onFailureCallback) {
+	storageWriteBatch.operations = append(storageWriteBatch.operations, operation{
 		ActionType: storageAddType,
 		MetaData: addOperationMetaData{
 			bucket:       bucket,
@@ -80,8 +75,8 @@ func (wb *storageBatch) Add(bucket string, fileName string, localPath string, fi
 }
 
 //Rename appends a Rename file operation to the batch.
-func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string, onFailure onFailureCallback) {
-	wb.operations = append(wb.operations, operation{
+func (storageWriteBatch *storageBatch) Rename(srcBucket string, srcName string, dstName string, onFailure onFailureCallback) {
+	storageWriteBatch.operations = append(storageWriteBatch.operations, operation{
 		ActionType: storageRenameType,
 		MetaData: renameOperationMetaData{
 			srcBucket: srcBucket,
@@ -94,8 +89,8 @@ func (wb *storageBatch) Rename(srcBucket string, srcName string, dstName string,
 }
 
 //Move appends a move file operation to the batch.
-func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string, dstName string, onFailure onFailureCallback) {
-	wb.operations = append(wb.operations, operation{
+func (storageWriteBatch *storageBatch) Move(srcBucket string, dstBucket string, srcName string, dstName string, onFailure onFailureCallback) {
+	storageWriteBatch.operations = append(storageWriteBatch.operations, operation{
 		ActionType: storageMoveType,
 		MetaData: moveOperationMetaData{
 			srcBucket: srcBucket,
@@ -108,106 +103,82 @@ func (wb *storageBatch) Move(srcBucket string, dstBucket string, srcName string,
 }
 
 //Delete is used to append an operation in which we can delete a specific file
-func (wb *storageBatch) Delete(srcBucket string, name string, onFailure onFailureCallback) {
-	wb.operations = append(wb.operations, operation{
+func (storageWriteBatch *storageBatch) Delete(srcBucket string, name string, onFailure onFailureCallback) {
+	storageWriteBatch.operations = append(storageWriteBatch.operations, operation{
 		ActionType: storageDeleteType,
 		MetaData: deleteOperationMetaData{
-			bucket: srcBucket,
-			name:   name,
+			bucket:    srcBucket,
+			name:      name,
 			onFailure: onFailure,
-
 		},
 	})
 }
 
 //Commit schedules batched operations in separate goroutines
-func (wb *storageBatch) Commit(ctx context.Context) error {
+func (storageWriteBatch *storageBatch) Commit(ctx context.Context) {
 	//Prevent calling goroutines if no operations are cached.
-	if wb.operations == nil || len(wb.operations) == 0 {
-		return nil
+	if storageWriteBatch.operations == nil || len(storageWriteBatch.operations) == 0 {
+		return
 	}
 
-	errorChannel := make(chan error, len(wb.operations))
 	var wg sync.WaitGroup
-	for _, operation := range wb.operations {
+	for _, operation := range storageWriteBatch.operations {
 		switch operation.ActionType {
 		case storageDeleteType:
 			metadata, _ := operation.MetaData.(deleteOperationMetaData)
 			wg.Add(1)
-			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
-				defer wg.Done()
-				if err := RemoveFile(metadata.bucket, metadata.name, wb.client, ctx); err != nil {
+			go func(waitGroup *sync.WaitGroup) {
+				defer waitGroup.Done()
+				if err := RemoveFile(metadata.bucket, metadata.name, storageWriteBatch.client, ctx); err != nil {
 					if metadata.onFailure != nil {
 						metadata.onFailure(err)
 					}
-					errorChan <- err
 					return
 				}
-			}(&wg, errorChannel)
+			}(&wg)
 			break
 		case storageRenameType:
 			metadata, _ := operation.MetaData.(renameOperationMetaData)
 			wg.Add(1)
-			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
-				defer wg.Done()
-				if err := RenameFile(metadata.srcBucket, metadata.srcName, metadata.dstName, wb.client, ctx); err != nil {
+			go func(waitGroup *sync.WaitGroup) {
+				defer waitGroup.Done()
+				if err := RenameFile(metadata.srcBucket, metadata.srcName, metadata.dstName, storageWriteBatch.client, ctx); err != nil {
 					if metadata.onFailure != nil {
 						metadata.onFailure(err)
 					}
-					errorChan <- err
 					return
 				}
-			}(&wg, errorChannel)
+			}(&wg)
 			break
 		case storageMoveType:
 			metadata, _ := operation.MetaData.(moveOperationMetaData)
 			wg.Add(1)
-			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
-				defer wg.Done()
-				if err := MoveFile(metadata.srcBucket, metadata.dstBucket, metadata.srcName, metadata.dstName, wb.client, ctx); err != nil {
+			go func(waitGroup *sync.WaitGroup) {
+				defer waitGroup.Done()
+				if err := MoveFile(metadata.srcBucket, metadata.dstBucket, metadata.srcName, metadata.dstName, storageWriteBatch.client, ctx); err != nil {
 					if metadata.onFailure != nil {
 						metadata.onFailure(err)
 					}
-					errorChan <- err
 					return
 				}
-			}(&wg, errorChannel)
+			}(&wg)
 			break
 		case storageAddType:
-		metadata, _ := operation.MetaData.(addOperationMetaData)
+			metadata, _ := operation.MetaData.(addOperationMetaData)
 			wg.Add(1)
-			go func(waitGroup *sync.WaitGroup, errorChan chan error) {
-				defer wg.Done()
-				if _,err := CreateStorageFileFromLocal(metadata.bucket, metadata.fileName, metadata.localPath,"", metadata.fileMetaData, wb.client, ctx); err != nil {
+			go func(waitGroup *sync.WaitGroup) {
+				defer waitGroup.Done()
+				if _, err := CreateStorageFileFromLocal(metadata.bucket, metadata.fileName, metadata.localPath, "", metadata.fileMetaData, storageWriteBatch.client, ctx); err != nil {
 					if metadata.onFailure != nil {
 						metadata.onFailure(err)
 					}
-					errorChan <- err
 					return
 				}
-			}(&wg, errorChannel)
+			}(&wg)
 			break
 		}
 	}
 	wg.Wait()
-	var receivedErrors []string
-	func() {
-		//select
-		for {
-			select {
-			case err := <-errorChannel:
-				receivedErrors = append(receivedErrors, err.Error())
-				break
-			default:
-				return
 
-			}
-		}
-	}()
-
-	if len(receivedErrors) > 0 {
-		return fmt.Errorf("Got %d Errors while commit - Errors : %s  \n", len(receivedErrors), string(utils.UnsafeAnythingToJSON(receivedErrors)))
-	}
-	return nil
-
+	return
 }
