@@ -22,11 +22,8 @@ const (
 	VideoMP4  FileContentType = "video/mp4"
 	VideoMOV  FileContentType = "video/mov"
 	VideoAVI  FileContentType = "video/avi"
-	FilePDG  FileContentType = "application/pdf"
-
+	FilePDG   FileContentType = "application/pdf"
 )
-
-
 
 //FileExists Checks if a Storage File Exists
 func FileExists(bucket, storagePath string, client *storage.Client, ctx context.Context) (bool, error) {
@@ -284,26 +281,23 @@ func GeneratePublicUrl(bucket, storageObject, serviceAccountPrivateKey, serviceA
 	return u, nil
 }
 
-
 //DeleteFolder Deletes all files within a Folder
-func DeleteFolder(bucket, folderPath string, client *storage.Client, ctx context.Context) error{
-	files,err := FilesInFolder(bucket,folderPath,"",client,ctx)
+func DeleteFolder(bucket, folderPath string, client *storage.Client, ctx context.Context) error {
+	files, err := FilesInFolder(bucket, folderPath, "", client, ctx)
 	if err != nil {
-		return fmt.Errorf("error while loading files in folder path %v" ,err)
+		return fmt.Errorf("error while loading files in folder path %v", err)
 	}
 
-	if files == nil{
+	if files == nil {
 		return err
 	}
 
 	batch := Batch(client)
 	for _, file := range *files {
-		fmt.Printf("file found : %s\n",file.Name )
-		batch.Delete(bucket, file.Name,func (failError error){
-			fmt.Printf("error while deleting file , filename: %v , error: %v\n" ,file.Name,failError)
+		batch.Delete(bucket, file.Name, func(failError error) {
+			fmt.Printf("error while deleting file , filename: %v , error: %v\n", file.Name, failError)
 		})
 	}
-
-	return batch.Commit(ctx)
+	batch.Commit(ctx)
+	return nil
 }
-
