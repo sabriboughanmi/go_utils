@@ -316,59 +316,64 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 				}
 			}
 
-			var collectionUpdateWG sync.WaitGroup
+			//Run the the firestore batch operations only if required
+			if contentBatchUpdate.batchOperations != nil && len(contentBatchUpdate.batchOperations) > 0 {
 
-			//Iterate over the Collections that require modifications
-			for collection, batchOperations := range contentBatchUpdate.batchOperations {
+				var collectionUpdateWG sync.WaitGroup
 
-				collectionUpdateWG.Add(1)
+				//Iterate over the Collections that require modifications
+				for collection, batchOperations := range contentBatchUpdate.batchOperations {
 
-				go func(fCollection string, operation *BatchOperation, firestorePartialSnapshots []FirestorePartialSnapshot, collectionsWG *sync.WaitGroup) {
-					defer collectionsWG.Done()
+					collectionUpdateWG.Add(1)
 
-					//Create a new firestore WriteBatch
-					var firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
+					//Process BatchOperations in separate Goroutines
+					go func(fCollection string, operation *BatchOperation, firestorePartialSnapshots []FirestorePartialSnapshot, collectionsWG *sync.WaitGroup) {
+						defer collectionsWG.Done()
 
-					//Create a collection Reference
-					var collectionReference = contentBatchUpdate.firestoreClient.Collection(fCollection)
+						//Create a new firestore WriteBatch
+						var firestoreWriteBatch = contentBatchUpdate.firestoreClient.Batch()
 
-					//Execute the lambda function
-					for _, doc := range firestorePartialSnapshots {
-						//skip (firestore skipped documents objects)
-						if doc.Document.DocumentFullPath == "" {
-							continue
+						//Create a collection Reference
+						var collectionReference = contentBatchUpdate.firestoreClient.Collection(fCollection)
+
+						//Execute the lambda function
+						for _, doc := range firestorePartialSnapshots {
+							//skip (firestore skipped documents objects)
+							if doc.Document.DocumentFullPath == "" {
+								continue
+							}
+
+							switch operation.OperationType {
+							case BatchOperationType_Update:
+								//Add an Update operation
+								firestoreWriteBatch.Update(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)), operation.FirestoreUpdate)
+								break
+							case BatchOperationType_Delete:
+								//Add a Delete operation
+								firestoreWriteBatch.Delete(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)))
+								break
+							default:
+								panic("unsupported BatchOperationType")
+							}
 						}
 
-						switch operation.OperationType {
-						case BatchOperationType_Update:
-							//Add an Update operation
-							firestoreWriteBatch.Update(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)), operation.FirestoreUpdate)
-							break
-						case BatchOperationType_Delete:
-							//Add a Delete operation
-							firestoreWriteBatch.Delete(collectionReference.Doc(filepath.Base(doc.Document.DocumentFullPath)))
-							break
-						default:
-							panic("unsupported BatchOperationType")
+						if _, err = firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
+							//FIXME: make it add register the errors, so we can log/handle them Later
+							fmt.Printf("%v", err)
+							return
 						}
 
-					}
+					}(collection, &batchOperations, partialSnapshots, &collectionUpdateWG)
+				}
 
-					if _, err = firestoreWriteBatch.Commit(contentBatchUpdate.ctx); err != nil {
-						//FIXME: make it add register the errors, so we can log/handle them Later
-						fmt.Printf("%v", err)
-						return
-					}
-
-					// Run the CallBack if set
-					if contentBatchUpdate.callback != nil {
-						contentBatchUpdate.callback(firestorePartialSnapshots)
-					}
-
-				}(collection, &batchOperations, partialSnapshots, &collectionUpdateWG)
+				//Wait the Collections Updates
+				collectionUpdateWG.Wait()
 			}
-			//Wait the Collections Updates
-			collectionUpdateWG.Wait()
+
+			// Run the CallBack if required
+			if contentBatchUpdate.callback != nil {
+				contentBatchUpdate.callback(partialSnapshots)
+			}
 
 		}(&wg, i)
 	}
