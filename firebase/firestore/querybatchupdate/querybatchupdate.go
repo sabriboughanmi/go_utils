@@ -253,13 +253,13 @@ func (contentBatchUpdate *ContentBatchUpdate) UpdateContentInBatch() error {
 	start := time.Now()
 
 	//Get Documents count
-	var res, err = query.NewAggregationQuery().WithCount(firestore.DocumentID).Get(contentBatchUpdate.ctx)
+	res, err := query.NewAggregationQuery().WithCount("doc_id").Get(contentBatchUpdate.ctx)
 	if err != nil {
 		return err
 	}
 
 	//Get the Documents count of the query.
-	queryDocumentsCount := int(res["__key__"].(*firestorepb.Value).GetIntegerValue())
+	queryDocumentsCount := int(res["doc_id"].(*firestorepb.Value).GetIntegerValue())
 
 	//Return if there is no documents to update
 	if queryDocumentsCount == 0 {
