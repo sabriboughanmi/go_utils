@@ -5,17 +5,17 @@ import (
 	numbersUtils "github.com/sabriboughanmi/go_utils/utils"
 )
 
-//AddCommand adds a firestoreUpdateCommand to the Queue
-func (firestoreUpdates *FirestoreUpdatesQueue) AddCommand(command firestoreUpdateCommand) {
+//AddCommand adds a FirestoreUpdateCommand to the Queue
+func (firestoreUpdates *FirestoreUpdatesQueue) AddCommand(command FirestoreUpdateCommand) {
 	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command)
 }
 
 //AddCommands adds FirestoreUpdateCommands to the Queue
-func (firestoreUpdates *FirestoreUpdatesQueue) AddCommands(command ...firestoreUpdateCommand) {
+func (firestoreUpdates *FirestoreUpdatesQueue) AddCommands(command ...FirestoreUpdateCommand) {
 	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command...)
 }
 
-//Merge fetch all firestoreUpdateCommand(s) from passed FirestoreUpdatesQueue(s)
+//Merge fetch all FirestoreUpdateCommand(s) from passed FirestoreUpdatesQueue(s)
 func (firestoreUpdates *FirestoreUpdatesQueue) Merge(queues ...FirestoreUpdatesQueue) {
 	for _, queue := range queues {
 		if queue.CommandsQueue != nil {
@@ -29,17 +29,17 @@ func (firestoreUpdates *FirestoreUpdatesQueue) ClearQueue() {
 	firestoreUpdates.CommandsQueue = nil
 }
 
-//GetFirestoreUpdates merges all firestoreUpdateCommand(s) and returns an []firestore.Update
+//GetFirestoreUpdates merges all FirestoreUpdateCommand(s) and returns an []firestore.Update
 func (firestoreUpdates *FirestoreUpdatesQueue) GetFirestoreUpdates() []firestore.Update {
 
-	var mergedCommands = make(map[string]firestoreUpdateCommand)
+	var mergedCommands = make(map[string]FirestoreUpdateCommand)
 
 	for _, command := range firestoreUpdates.CommandsQueue {
 
 		//Handle ArrayInsert Commands
 		if command.commandType == FirestoreCommand_ArrayInsert {
 			if oldCommand, found := mergedCommands[command.path]; !found {
-				var newCommand = firestoreUpdateCommand{
+				var newCommand = FirestoreUpdateCommand{
 					path:        command.path,
 					commandType: FirestoreCommand_ArrayInsert,
 					value:       []interface{}{command.value},
@@ -56,7 +56,7 @@ func (firestoreUpdates *FirestoreUpdatesQueue) GetFirestoreUpdates() []firestore
 		if command.commandType == FirestoreCommand_ArrayRemove {
 
 			if oldCommand, found := mergedCommands[command.path]; !found {
-				var newCommand = firestoreUpdateCommand{
+				var newCommand = FirestoreUpdateCommand{
 					path:        command.path,
 					commandType: FirestoreCommand_ArrayRemove,
 					value:       []interface{}{command.value},

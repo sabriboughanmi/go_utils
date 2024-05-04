@@ -14,14 +14,14 @@ const (
 	FirestoreCommand_ArrayRemove = 3
 )
 
-type firestoreUpdateCommand struct {
+type FirestoreUpdateCommand struct {
 	commandType EFirestoreCommand
 	path        string
 	value       interface{}
 }
 
 type FirestoreUpdatesQueue struct {
-	CommandsQueue []firestoreUpdateCommand
+	CommandsQueue []FirestoreUpdateCommand
 }
 
 //FetchCommandErrorHandler defines either a fetch error can be handled or not.
