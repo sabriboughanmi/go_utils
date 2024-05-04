@@ -1,18 +1,21 @@
 package fetchbatch
 
-import "cloud.google.com/go/firestore"
+import (
+	"cloud.google.com/go/firestore"
+	numbersUtils "github.com/sabriboughanmi/go_utils/utils"
+)
 
-//AddCommand adds a FirestoreUpdateCommand to the Queue
-func (firestoreUpdates *FirestoreUpdatesQueue) AddCommand(command FirestoreUpdateCommand) {
+//AddCommand adds a firestoreUpdateCommand to the Queue
+func (firestoreUpdates *FirestoreUpdatesQueue) AddCommand(command firestoreUpdateCommand) {
 	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command)
 }
 
 //AddCommands adds FirestoreUpdateCommands to the Queue
-func (firestoreUpdates *FirestoreUpdatesQueue) AddCommands(command ...FirestoreUpdateCommand) {
+func (firestoreUpdates *FirestoreUpdatesQueue) AddCommands(command ...firestoreUpdateCommand) {
 	firestoreUpdates.CommandsQueue = append(firestoreUpdates.CommandsQueue, command...)
 }
 
-//Merge fetch all FirestoreUpdateCommand(s) from passed FirestoreUpdatesQueue(s)
+//Merge fetch all firestoreUpdateCommand(s) from passed FirestoreUpdatesQueue(s)
 func (firestoreUpdates *FirestoreUpdatesQueue) Merge(queues ...FirestoreUpdatesQueue) {
 	for _, queue := range queues {
 		if queue.CommandsQueue != nil {
@@ -26,17 +29,62 @@ func (firestoreUpdates *FirestoreUpdatesQueue) ClearQueue() {
 	firestoreUpdates.CommandsQueue = nil
 }
 
-//GetFirestoreUpdates merges all FirestoreUpdateCommand(s) and returns an []firestore.Update
+//GetFirestoreUpdates merges all firestoreUpdateCommand(s) and returns an []firestore.Update
 func (firestoreUpdates *FirestoreUpdatesQueue) GetFirestoreUpdates() []firestore.Update {
 
-	var mergedCommands = make(map[string]FirestoreUpdateCommand)
+	var mergedCommands = make(map[string]firestoreUpdateCommand)
 
 	for _, command := range firestoreUpdates.CommandsQueue {
-		if oldCommand, found := mergedCommands[command.Path]; !found || command.CommandType == FirestoreCommand_Set {
-			mergedCommands[command.Path] = command
+
+		//Handle ArrayInsert Commands
+		if command.commandType == FirestoreCommand_ArrayInsert {
+			if oldCommand, found := mergedCommands[command.path]; !found {
+				var newCommand = firestoreUpdateCommand{
+					path:        command.path,
+					commandType: FirestoreCommand_ArrayInsert,
+					value:       []interface{}{command.value},
+				}
+				mergedCommands[command.path] = newCommand
+			} else {
+				var interfaceArray = oldCommand.value.([]interface{})
+				interfaceArray = append(interfaceArray, command.value)
+			}
+			continue
+		}
+
+		//Handle ArrayRemove Commands
+		if command.commandType == FirestoreCommand_ArrayRemove {
+
+			if oldCommand, found := mergedCommands[command.path]; !found {
+				var newCommand = firestoreUpdateCommand{
+					path:        command.path,
+					commandType: FirestoreCommand_ArrayRemove,
+					value:       []interface{}{command.value},
+				}
+				mergedCommands[command.path] = newCommand
+			} else {
+				var interfaceArray = oldCommand.value.([]interface{})
+				interfaceArray = append(interfaceArray, command.value)
+			}
+			continue
+		}
+
+		//Handle Field Set/Update Commands
+		if oldCommand, found := mergedCommands[command.path]; !found || command.commandType == FirestoreCommand_Set {
+			mergedCommands[command.path] = command
 		} else {
-			oldCommand.Value += command.Value
-			mergedCommands[command.Path] = oldCommand
+			if numbersUtils.IsInteger(oldCommand.value) {
+				oldValue, _ := numbersUtils.ToInt64(oldCommand.value)
+				newValue, _ := numbersUtils.ToInt64(command.value)
+				oldCommand.value = oldValue + newValue
+
+			} else if numbersUtils.IsFloatingPointNumber(oldCommand.value) {
+				oldValue, _ := numbersUtils.ToFloat64(oldCommand.value)
+				newValue, _ := numbersUtils.ToFloat64(command.value)
+				oldCommand.value = oldValue + newValue
+			}
+
+			mergedCommands[command.path] = oldCommand
 		}
 	}
 
@@ -45,11 +93,25 @@ func (firestoreUpdates *FirestoreUpdatesQueue) GetFirestoreUpdates() []firestore
 		var firestoreUpdate = firestore.Update{
 			Path: path,
 		}
-		if command.CommandType == FirestoreCommand_Set {
-			firestoreUpdate.Value = command.Value
-		} else {
-			firestoreUpdate.Value = firestore.Increment(command.Value)
+
+		switch command.commandType {
+		case FirestoreCommand_Set:
+			firestoreUpdate.Value = command.value
+			break
+		case FirestoreCommand_Increment:
+			firestoreUpdate.Value = firestore.Increment(command.value)
+			break
+		case FirestoreCommand_ArrayInsert:
+			var interfaceArray = command.value.([]interface{})
+			firestoreUpdate.Value = firestore.ArrayUnion(interfaceArray...)
+			break
+		case FirestoreCommand_ArrayRemove:
+			var interfaceArray = command.value.([]interface{})
+			firestoreUpdate.Value = firestore.ArrayRemove(interfaceArray...)
+			break
+
 		}
+
 		updates = append(updates, firestoreUpdate)
 	}
 	return updates

@@ -49,7 +49,7 @@ func InitFromCredentials(email, privateKey, projectID string) (*ProjectConfig, e
 	return &projectConfig, nil
 }
 
-//ServiceAccount Initialize the Service Account using a ServiceAccount.Json Path
+//ServiceAccount Initialize the Service Account using a ServiceAccount.Json path
 func InitFromPath(serviceAccountPath string) (*ProjectConfig, error) {
 	var projectConfig ProjectConfig
 	b, err := ioutil.ReadFile(serviceAccountPath)

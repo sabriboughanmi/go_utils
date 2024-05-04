@@ -8,18 +8,20 @@ import (
 type EFirestoreCommand int
 
 const (
-	FirestoreCommand_Set    = 0
-	FirestoreCommand_Update = 1
+	FirestoreCommand_Set         = 0
+	FirestoreCommand_Increment   = 1
+	FirestoreCommand_ArrayInsert = 2
+	FirestoreCommand_ArrayRemove = 3
 )
 
-type FirestoreUpdateCommand struct {
-	CommandType EFirestoreCommand
-	Value       int
-	Path        string
+type firestoreUpdateCommand struct {
+	commandType EFirestoreCommand
+	path        string
+	value       interface{}
 }
 
 type FirestoreUpdatesQueue struct {
-	CommandsQueue []FirestoreUpdateCommand
+	CommandsQueue []firestoreUpdateCommand
 }
 
 //FetchCommandErrorHandler defines either a fetch error can be handled or not.

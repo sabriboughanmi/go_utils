@@ -41,7 +41,7 @@ func mapStringInterfaceToMappedModel(anything map[string]interface{}, usedType i
 		if !keyFound {
 			//This field has to be declared
 			if !omitempty {
-				return fmt.Errorf("Path not Found : %s\n", key)
+				return fmt.Errorf("path not Found : %s\n", key)
 			}
 			continue
 		}

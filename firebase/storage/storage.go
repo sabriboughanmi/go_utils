@@ -189,7 +189,7 @@ func CreateFile(bucket, fileName string, content []byte, contentType FileContent
 	return nil
 }
 
-// CreateStorageFileFromLocal creates a file in Google Cloud Storage from a Local file Path.
+// CreateStorageFileFromLocal creates a file in Google Cloud Storage from a Local file path.
 func CreateStorageFileFromLocal(bucket, fileName, localPath string, contentType FileContentType, fileMetaData map[string]string, client *storage.Client, ctx context.Context) (*storage.ObjectHandle, error) {
 	data, err := ioutil.ReadFile(localPath)
 	if err != nil {

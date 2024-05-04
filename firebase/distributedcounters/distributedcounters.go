@@ -183,7 +183,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	//Collect incremental Ints
 	for key, value := range incrementalIntFields {
 		valuesToUpdate = append(valuesToUpdate, firestore.Update{
-			Path:  key,
+			path:  key,
 			Value: firestore.Increment(value),
 		})
 	}
@@ -191,7 +191,7 @@ func rollUpShards(client *firestore.Client, ctx context.Context, shards ...*fire
 	//Collect incremental Floats
 	for key, value := range incrementalFloatFields {
 		valuesToUpdate = append(valuesToUpdate, firestore.Update{
-			Path:  key,
+			path:  key,
 			Value: firestore.Increment(value),
 		})
 	}

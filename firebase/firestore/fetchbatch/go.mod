@@ -4,5 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go/firestore v1.6.1
-	github.com/sabriboughanmi/go_utils/utils v0.0.0-20220108215143-7e5ff88e7c2b
+	github.com/sabriboughanmi/go_utils/utils v0.0.0-00010101000000-000000000000
 )
+
+replace github.com/sabriboughanmi/go_utils/utils => ./../../../utils

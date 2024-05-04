@@ -121,4 +121,5 @@ func Float64(n interface{}) float64 {
 	default:
 		panic(fmt.Sprintf("connot convert '%v' of type '%v' to int64", n, reflect.TypeOf(n).Kind()))
 	}
+
 }

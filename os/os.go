@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-//CreateTempDirectory creates a Directory in Temp Path.
+//CreateTempDirectory creates a Directory in Temp path.
 //This is Required cause Cloud Functions do not Create Directory Folder for us
 func CreateTempDirectory(directory string) error {
 	return os.Mkdir(directory, os.ModePerm)
