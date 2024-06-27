@@ -533,7 +533,9 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 		"-y",
 		"-i", videoPath,
 		"-i", iconPath,
+		//Insert the watermark at bottom right of the video
 		"-filter_complex", "overlay=W-w-10:H-h-10",
+		//Copy the video audio without encoding it
 		"-codec:a", "copy",
 		"-vcodec", "libx264",
 	}
