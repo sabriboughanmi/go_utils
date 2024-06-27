@@ -31,7 +31,7 @@ func (v *Video) GetVideoRotate() *int {
 	return v.rotate
 }
 
-//GetEditableVideoResolution returns the lowest value between  width and height
+// GetEditableVideoResolution returns the lowest value between  width and height
 func (v *EditableVideo) GetEditableVideoResolution() VideoResolution {
 	if v.width > v.height {
 		return VideoResolution(v.height)
@@ -39,7 +39,7 @@ func (v *EditableVideo) GetEditableVideoResolution() VideoResolution {
 	return VideoResolution(v.width)
 }
 
-//GetVideoResolution returns the lowest value between  width and height
+// GetVideoResolution returns the lowest value between  width and height
 func (v *Video) GetVideoResolution() VideoResolution {
 	if v.width > v.height {
 		return VideoResolution(v.height)
@@ -47,7 +47,7 @@ func (v *Video) GetVideoResolution() VideoResolution {
 	return VideoResolution(v.width)
 }
 
-//GetAspectRatio returns the Aspect Ratio
+// GetAspectRatio returns the Aspect Ratio
 func (v *EditableVideo) GetAspectRatio() float32 {
 	if v.width > v.height {
 		return float32(v.width) / float32(v.height)
@@ -55,7 +55,7 @@ func (v *EditableVideo) GetAspectRatio() float32 {
 	return float32(v.height) / float32(v.width)
 }
 
-//GetDuration return Video Duration in Seconds
+// GetDuration return Video Duration in Seconds
 func (v *Video) GetDuration() float64 {
 	return v.duration.Seconds()
 }
@@ -111,7 +111,7 @@ type FFmpegError error
 
 var ForbiddenContentError = errors.New("Forbidden Content")
 
-//calculateFramesToModerate returns the number of frames to moderate
+// calculateFramesToModerate returns the number of frames to moderate
 func (v *Video) calculateFramesToModerate(durationStep float64) int {
 	var videoDuration = v.GetDuration()
 	var duration float64 = 0
@@ -127,7 +127,7 @@ func (v *Video) calculateFramesToModerate(durationStep float64) int {
 	return framesCount
 }
 
-//ModerateVideo verify if a video contain forbidden content
+// ModerateVideo verify if a video contain forbidden content
 func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, tolerance int32, imgAnnotClient *Vision.ImageAnnotatorClient) (error, bool) {
 	var framesToModerateCount = v.calculateFramesToModerate(durationStep)
 	fmt.Printf("frames : %d \n", framesToModerateCount)
@@ -190,7 +190,7 @@ func (v *Video) ModerateVideo(durationStep float64, ctx context.Context, toleran
 }
 
 // ModerateVideoFrame if verify if an extended frame contain forbidden content.
-//False -> frame contains forbidden content.
+// False -> frame contains forbidden content.
 func ModerateVideoFrame(localPath string, ctx context.Context, tolerance int32, client *Vision.ImageAnnotatorClient) (bool, error) {
 	fmt.Printf("Called with image : %s\n", localPath)
 	f, err := os.Open(localPath)
@@ -338,7 +338,7 @@ func LoadVideo(path string) (*Video, error) {
 }
 
 // LoadVideoFromFragments returns a Video that can be operated on. Load does not open the file or load it into memory.
-//Note! path and Fragments need to be already Existing
+// Note! path and Fragments need to be already Existing
 func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error) {
 
 	importList := `# this is a comment`
@@ -381,13 +381,13 @@ func LoadVideoFromFragments(path string, fragmentsPath ...string) (*Video, error
 	return LoadVideo(path)
 }
 
-//MergeFragmentsFragments Merges fragments to a specified path.
+// MergeFragmentsFragments Merges fragments to a specified path.
 //
-//deleteFragments: if enabled will delete the fragments after merging them.
+// deleteFragments: if enabled will delete the fragments after merging them.
 //
-//Note! path and Fragments need to be already Existing.
+// Note! path and Fragments need to be already Existing.
 //
-//Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
+// Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
 func MergeFragmentsFragments(outputPath string, deleteFragments bool, fragmentsPath ...string) error {
 
 	if len(fragmentsPath) < 2 {
@@ -483,13 +483,13 @@ func MergeFragmentsFragments(outputPath string, deleteFragments bool, fragmentsP
 	return nil
 }
 
-//LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
+// LoadVideoFromReEncodedFragments returns a merged Video that can be operated on.
 //
-//deleteFragments: if enabled will delete the fragments after merging them.
+// deleteFragments: if enabled will delete the fragments after merging them.
 //
-//Note! path and Fragments need to be already Existing.
+// Note! path and Fragments need to be already Existing.
 //
-//Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
+// Note! this function will ReEncode all fragments to Fix any Resolution/Rotation problem
 func LoadVideoFromReEncodedFragmentsINPROGRESS(outputPath string, deleteFragments bool, fragmentsPath ...string) (*Video, error) {
 	if err := MergeFragmentsFragments(outputPath, deleteFragments, fragmentsPath...); err != nil {
 		return nil, err
@@ -512,7 +512,7 @@ func (v *EditableVideo) executeCommandInBackground(command []string, consoleOutp
 	return cmd, nil
 }
 
-//GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
+// GetEditableVideo returns an EditableVideo instance than can be used to safely modify a Video
 func (v *Video) GetEditableVideo() *EditableVideo {
 	var eVideo = EditableVideo(*v)
 
@@ -525,7 +525,7 @@ func (v *Video) GetEditableVideo() *EditableVideo {
 	return &eVideo
 }
 
-//AddWaterMark Adds a Water mark to a video
+// AddWaterMark Adds a Water mark to a video
 func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, widthSize, heightSize int) error {
 
 	cmdline := []string{
@@ -533,6 +533,8 @@ func (v *EditableVideo) AddWaterMark(videoPath, iconPath, outputPath string, wid
 		"-y",
 		"-i", videoPath,
 		"-i", iconPath,
+		"-filter_complex", "overlay=W-w-10:H-h-10",
+		"-codec:a", "copy",
 		"-vcodec", "libx264",
 	}
 	cmdline = append(cmdline, v.additionalArgs...)
@@ -746,7 +748,7 @@ func (v *EditableVideo) SetConstantRateFactor(value int) {
 	v.additionalArgs = append(v.additionalArgs, strconv.Itoa(value))
 }
 
-//GetResolutions returns the video (Width,Height) tuple for a specific VideoResolution
+// GetResolutions returns the video (Width,Height) tuple for a specific VideoResolution
 func (v *EditableVideo) GetResolutions(res VideoResolution) (int, int) {
 	aspectRatio := v.GetAspectRatio()
 	maxSize := toEvenNumber(int(float32(res) * aspectRatio))
@@ -775,7 +777,7 @@ func (v *EditableVideo) SetResolution(res VideoResolution) {
 	}
 }
 
-//SetFilePath set the filepath for a video
+// SetFilePath set the filepath for a video
 func (v *Video) SetFilePath(p string) {
 	v.filepath = p
 }
