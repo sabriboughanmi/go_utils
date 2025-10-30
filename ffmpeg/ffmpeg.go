@@ -2,20 +2,21 @@ package ffmpeg
 
 import (
 	"bytes"
-	Vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	osUtils "github.com/sabriboughanmi/go_utils/os"
-	"github.com/sabriboughanmi/go_utils/utils"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"sync"
 	"time"
+
+	Vision "cloud.google.com/go/vision/apiv1"
+	osUtils "github.com/sabriboughanmi/go_utils/os"
+	"github.com/sabriboughanmi/go_utils/utils"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // GetVideoOrientation returns the video Screen Orientation
@@ -782,6 +783,39 @@ func (v *EditableVideo) SetResolution(res VideoResolution) {
 // SetFilePath set the filepath for a video
 func (v *Video) SetFilePath(p string) {
 	v.filepath = p
+}
+
+// SetIntro sets the intro video path that will be concatenated at the beginning of the main video.
+func (v *EditableVideo) SetIntro(path string) *EditableVideo {
+	v.introPath = &path
+	return v
+}
+
+// SetOutro sets the outro video path that will be concatenated at the end of the main video.
+func (v *EditableVideo) SetOutro(path string) *EditableVideo {
+	v.outroPath = &path
+	return v
+}
+
+// IntroPath returns the intro video path if set, nil otherwise.
+func (v *EditableVideo) IntroPath() *string {
+	return v.introPath
+}
+
+// OutroPath returns the outro video path if set, nil otherwise.
+func (v *EditableVideo) OutroPath() *string {
+	return v.outroPath
+}
+
+// SetBackgroundMusic sets the background music options. The music will be mixed with the original video audio.
+func (v *EditableVideo) SetBackgroundMusic(options BackgroundMusicOptions) *EditableVideo {
+	v.backgroundMusic = &options
+	return v
+}
+
+// BackgroundMusic returns the background music options if set, nil otherwise.
+func (v *EditableVideo) BackgroundMusic() *BackgroundMusicOptions {
+	return v.backgroundMusic
 }
 
 // Crop makes the output video a sub-rectangle of the input video. (0,0) is the

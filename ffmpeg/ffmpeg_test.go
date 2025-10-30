@@ -1,14 +1,15 @@
 package ffmpeg
 
 import (
-	"cloud.google.com/go/storage"
-	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
-	"google.golang.org/api/option"
 	"sync"
 	"testing"
 	"time"
+
+	"cloud.google.com/go/storage"
+	vision "cloud.google.com/go/vision/apiv1"
+	"google.golang.org/api/option"
 )
 
 var storageClientOnce sync.Once
@@ -23,7 +24,7 @@ const (
 	serviceAccountPath = "./../private_data/serviceAccountKey.json"
 )
 
-//GetStorageClient returns a Singleton *storage.Client
+// GetStorageClient returns a Singleton *storage.Client
 func GetStorageClient() (*storage.Client, error) {
 	var err error
 	storageClientOnce.Do(func() {
@@ -65,7 +66,7 @@ func TestModerateVideo(t *testing.T) {
 
 func TestLoadVideoFromReEncodedFragments(t *testing.T) {
 
-	video, err := LoadVideoFromReEncodedFragments("C:\\Users\\Sabri\\Downloads\\Video\\output.mp4", false,
+	video, err := LoadVideoFromReEncodedFragments("C:\\Users\\Sabri\\Downloads\\Video\\output.mp4", //false,
 		"C:\\Users\\Sabri\\Downloads\\Video\\1.mp4", "C:\\Users\\Sabri\\Downloads\\Video\\2.mp4")
 
 	if err != nil {
