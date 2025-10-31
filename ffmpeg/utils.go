@@ -2,8 +2,85 @@ package ffmpeg
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
+
+// buildVolumeExpression creates an FFmpeg volume filter expression from volume segments
+func buildVolumeExpression(segments []VolumeSegment) string {
+	if len(segments) == 0 {
+		return "1.0" // Default volume
+	}
+
+	// Sort segments by start time
+	sortedSegments := make([]VolumeSegment, len(segments))
+	copy(sortedSegments, segments)
+	sort.Slice(sortedSegments, func(i, j int) bool {
+		return sortedSegments[i].StartTime < sortedSegments[j].StartTime
+	})
+
+	// Build nested if expression
+	expr := ""
+	defaultVolume := float32(1.0)
+
+	// Build the expression from last to first (nested ifs)
+	for i := len(sortedSegments) - 1; i >= 0; i-- {
+		seg := sortedSegments[i]
+		startSec := seg.StartTime.Seconds()
+		endSec := seg.EndTime.Seconds()
+
+		if seg.TransitionType == VolumeTransitionLinear && i > 0 {
+			// Linear transition from previous segment's volume
+			prevVol := sortedSegments[i-1].Volume
+			transStartSec := startSec
+			transEndSec := startSec + seg.TransitionDuration.Seconds()
+
+			// Clamp transition end to segment end
+			if transEndSec > endSec {
+				transEndSec = endSec
+			}
+
+			// Build linear ramp expression: prevVol + (t-transStart)/(transEnd-transStart) * (newVol-prevVol)
+			if transEndSec > transStartSec {
+				rampExpr := fmt.Sprintf("%.3f+(t-%.3f)/(%.3f-%.3f)*(%.3f-%.3f)",
+					prevVol, transStartSec, transEndSec, transStartSec, seg.Volume, prevVol)
+
+				// Three zones: transition period, constant period, and rest
+				if expr == "" {
+					expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%s,if(between(t,%.3f,%.3f),%.3f,%.3f))",
+						transStartSec, transEndSec, rampExpr,
+						transEndSec, endSec, seg.Volume,
+						defaultVolume)
+				} else {
+					expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%s,if(between(t,%.3f,%.3f),%.3f,%s))",
+						transStartSec, transEndSec, rampExpr,
+						transEndSec, endSec, seg.Volume,
+						expr)
+				}
+			} else {
+				// Transition duration is 0 or invalid, treat as instant
+				if expr == "" {
+					expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%.3f,%.3f)",
+						startSec, endSec, seg.Volume, defaultVolume)
+				} else {
+					expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%.3f,%s)",
+						startSec, endSec, seg.Volume, expr)
+				}
+			}
+		} else {
+			// Instant transition
+			if expr == "" {
+				expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%.3f,%.3f)",
+					startSec, endSec, seg.Volume, defaultVolume)
+			} else {
+				expr = fmt.Sprintf("if(between(t,%.3f,%.3f),%.3f,%s)",
+					startSec, endSec, seg.Volume, expr)
+			}
+		}
+	}
+
+	return expr
+}
 
 func (v *Video) clampToDuration(t time.Duration) time.Duration {
 	if t < 0 {
@@ -52,11 +129,16 @@ func (v *EditableVideo) commandLine(output string) []string {
 		var videoPaths []string
 		if hasIntro {
 			videoPaths = append(videoPaths, *v.introPath)
+			fmt.Printf("DEBUG: Adding intro: %s\n", *v.introPath)
 		}
 		videoPaths = append(videoPaths, v.filepath)
+		fmt.Printf("DEBUG: Adding main: %s\n", v.filepath)
 		if hasOutro {
 			videoPaths = append(videoPaths, *v.outroPath)
+			fmt.Printf("DEBUG: Adding outro: %s\n", *v.outroPath)
 		}
+
+		fmt.Printf("DEBUG: Total video paths: %d\n", len(videoPaths))
 
 		for _, path := range videoPaths {
 			cmdline = append(cmdline, "-i", path)
@@ -89,8 +171,8 @@ func (v *EditableVideo) commandLine(output string) []string {
 			videoOutputLabel = "[outv]"
 			audioOutputLabel = "[videoa]"
 		} else {
-			// Single video, just use input directly
-			videoOutputLabel = "[0:v]"
+			// Single video, use direct stream mapping for video (no filter needed)
+			videoOutputLabel = "0:v"
 			audioOutputLabel = "[0:a:0]"
 		}
 
@@ -131,8 +213,27 @@ func (v *EditableVideo) commandLine(output string) []string {
 				musicFilter += "aloop=loop=-1:size=2e+09,"
 			}
 
-			// Apply volume adjustment
-			musicFilter += fmt.Sprintf("volume=%.3f,", music.Volume)
+			// Reset timestamps after looping so volume filter time references are correct
+			// This is critical for time-based volume control to work properly
+			musicFilter += "asetpts=PTS-STARTPTS,"
+
+			// Apply volume adjustment (dynamic or static)
+			if len(music.VolumeSegments) > 0 {
+				// Build dynamic volume expression from segments
+				fmt.Printf("DEBUG: Building volume expression from %d segments\n", len(music.VolumeSegments))
+				for i, seg := range music.VolumeSegments {
+					fmt.Printf("  Segment %d: %.1fs-%.1fs, vol=%.3f, type=%s\n",
+						i, seg.StartTime.Seconds(), seg.EndTime.Seconds(), seg.Volume, seg.TransitionType)
+				}
+				volumeExpr := buildVolumeExpression(music.VolumeSegments)
+				fmt.Printf("DEBUG: Volume expression: %s\n", volumeExpr)
+				// Use volume filter with eval=frame to evaluate expression for each frame
+				musicFilter += fmt.Sprintf("volume='%s':eval=frame,", volumeExpr)
+			} else {
+				// Use static volume
+				fmt.Printf("DEBUG: Using static volume: %.3f\n", music.Volume)
+				musicFilter += fmt.Sprintf("volume=%.3f,", music.Volume)
+			}
 
 			// Apply fade in if specified
 			if music.FadeInDuration > 0 {
@@ -151,6 +252,7 @@ func (v *EditableVideo) commandLine(output string) []string {
 			// Trim to video duration
 			musicFilter += fmt.Sprintf("atrim=0:%.3f[music];", totalDuration.Seconds())
 
+			fmt.Printf("DEBUG: Full music filter: %s\n", musicFilter)
 			filterComplex += musicFilter
 
 			// Mix music with video audio
@@ -160,10 +262,12 @@ func (v *EditableVideo) commandLine(output string) []string {
 
 		// Add filter_complex if we built one
 		if filterComplex != "" {
+			fmt.Printf("DEBUG: Final filter_complex:\n%s\n", filterComplex)
 			cmdline = append(cmdline, "-filter_complex", filterComplex)
 		}
 
 		// Map outputs
+		fmt.Printf("DEBUG: Video output: %s, Audio output: %s\n", videoOutputLabel, audioOutputLabel)
 		cmdline = append(cmdline, "-map", videoOutputLabel, "-map", audioOutputLabel)
 
 		// Add codec

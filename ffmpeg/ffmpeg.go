@@ -818,6 +818,115 @@ func (v *EditableVideo) BackgroundMusic() *BackgroundMusicOptions {
 	return v.backgroundMusic
 }
 
+// SetMusicVolumeForIntro sets the volume level for the intro portion of the video.
+// This is a convenience method that automatically calculates intro duration.
+// For linear transitions, uses a default 1 second transition duration.
+func (v *EditableVideo) SetMusicVolumeForIntro(volume float32, transition VolumeTransitionType) *EditableVideo {
+	if v.backgroundMusic == nil {
+		// Initialize background music options if not set
+		v.backgroundMusic = &BackgroundMusicOptions{}
+	}
+
+	if v.introPath != nil {
+		introVideo, err := LoadVideo(*v.introPath)
+		if err == nil {
+			segment := VolumeSegment{
+				StartTime:          0,
+				EndTime:            introVideo.duration,
+				Volume:             volume,
+				TransitionType:     transition,
+				TransitionDuration: 1 * time.Second, // Default 1 second for linear transitions
+			}
+			v.backgroundMusic.VolumeSegments = append(v.backgroundMusic.VolumeSegments, segment)
+		}
+	}
+
+	return v
+}
+
+// SetMusicVolumeForMain sets the volume level for the main video portion.
+// This is a convenience method that automatically calculates the main video time range.
+// For linear transitions, uses a default 1 second transition duration.
+func (v *EditableVideo) SetMusicVolumeForMain(volume float32, transition VolumeTransitionType) *EditableVideo {
+	if v.backgroundMusic == nil {
+		v.backgroundMusic = &BackgroundMusicOptions{}
+	}
+
+	var startTime, endTime time.Duration
+
+	// Calculate start time (after intro if present)
+	if v.introPath != nil {
+		introVideo, err := LoadVideo(*v.introPath)
+		if err == nil {
+			startTime = introVideo.duration
+		}
+	}
+
+	// Calculate end time (main video duration + intro)
+	endTime = startTime + v.duration
+
+	segment := VolumeSegment{
+		StartTime:          startTime,
+		EndTime:            endTime,
+		Volume:             volume,
+		TransitionType:     transition,
+		TransitionDuration: 1 * time.Second, // Default 1 second for linear transitions
+	}
+	v.backgroundMusic.VolumeSegments = append(v.backgroundMusic.VolumeSegments, segment)
+
+	return v
+}
+
+// SetMusicVolumeForOutro sets the volume level for the outro portion of the video.
+// This is a convenience method that automatically calculates outro time range.
+// For linear transitions, uses a default 1 second transition duration.
+func (v *EditableVideo) SetMusicVolumeForOutro(volume float32, transition VolumeTransitionType) *EditableVideo {
+	if v.backgroundMusic == nil {
+		v.backgroundMusic = &BackgroundMusicOptions{}
+	}
+
+	var startTime, endTime time.Duration
+
+	// Calculate start time (after intro + main)
+	if v.introPath != nil {
+		introVideo, err := LoadVideo(*v.introPath)
+		if err == nil {
+			startTime += introVideo.duration
+		}
+	}
+	startTime += v.duration
+
+	// Calculate end time (start + outro duration)
+	if v.outroPath != nil {
+		outroVideo, err := LoadVideo(*v.outroPath)
+		if err == nil {
+			endTime = startTime + outroVideo.duration
+		}
+	}
+
+	segment := VolumeSegment{
+		StartTime:          startTime,
+		EndTime:            endTime,
+		Volume:             volume,
+		TransitionType:     transition,
+		TransitionDuration: 1 * time.Second, // Default 1 second for linear transitions
+	}
+	v.backgroundMusic.VolumeSegments = append(v.backgroundMusic.VolumeSegments, segment)
+
+	return v
+}
+
+// AddMusicVolumeSegment adds a custom volume control segment at specific times.
+// This provides full control over volume at any time range in the video.
+func (v *EditableVideo) AddMusicVolumeSegment(segment VolumeSegment) *EditableVideo {
+	if v.backgroundMusic == nil {
+		v.backgroundMusic = &BackgroundMusicOptions{}
+	}
+
+	v.backgroundMusic.VolumeSegments = append(v.backgroundMusic.VolumeSegments, segment)
+	return v
+}
+
 // Crop makes the output video a sub-rectangle of the input video. (0,0) is the
 // top-left of the video, x goes right, y goes down.
 func (v *Video) Crop(x, y, width, height int) {
