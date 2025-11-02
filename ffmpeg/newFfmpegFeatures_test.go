@@ -10,10 +10,10 @@ import (
 // ============================================
 var (
 	// Input video paths
-	mainVideoPath  = "/Users/sabriboughanmi/Documents/Smash/mainvideo.mp4"
-	introVideoPath = "/Users/sabriboughanmi/Documents/Smash/Intro.mp4"
-	outroVideoPath = "/Users/sabriboughanmi/Documents/Smash/Outro.mp4"
-	musicFilePath  = "/Users/sabriboughanmi/Documents/Smash/Musique.MP3"
+	mainVideoPath  = "/Users/sabriboughanmi/Documents/Smash/mainvideo4.mp4"
+	introVideoPath = "/Users/sabriboughanmi/Documents/Smash/intro.mp4"
+	outroVideoPath = "/Users/sabriboughanmi/Documents/Smash/outro.mp4"
+	musicFilePath  = "/Users/sabriboughanmi/Documents/Smash/music.MP3"
 
 	// Output path
 	outputVideoPath = "/Users/sabriboughanmi/Documents/Smash/output_complete.mp4"

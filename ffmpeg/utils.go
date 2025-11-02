@@ -155,15 +155,37 @@ func (v *EditableVideo) commandLine(output string) []string {
 		var videoOutputLabel, audioOutputLabel string
 
 		if len(videoPaths) > 1 {
+			// Determine which index is the main video
+			mainVideoIndex := 0
+			if hasIntro {
+				mainVideoIndex = 1 // Main video is after intro
+			}
+
 			// Scale all videos to the main video's resolution
 			for i := 0; i < len(videoPaths); i++ {
-				filterComplex += fmt.Sprintf("[%d:v]scale=%d:%d:force_original_aspect_ratio=decrease,setsar=1,pad=%d:%d:(ow-iw)/2:(oh-ih)/2[v%d];",
-					i, v.width, v.height, v.width, v.height, i)
+				videoFilter := fmt.Sprintf("[%d:v]", i)
+				audioFilter := fmt.Sprintf("[%d:a:0]", i)
+
+				// Apply trim to main video only if start/end are set
+				if i == mainVideoIndex && (v.start > 0 || v.end < v.duration) {
+					// Trim video stream
+					trimDuration := (v.end - v.start).Seconds()
+					videoFilter += fmt.Sprintf("trim=start=%.3f:duration=%.3f,setpts=PTS-STARTPTS,", v.start.Seconds(), trimDuration)
+					// Trim audio stream
+					audioFilter += fmt.Sprintf("atrim=start=%.3f:duration=%.3f,asetpts=PTS-STARTPTS,", v.start.Seconds(), trimDuration)
+				}
+
+				// Apply scaling
+				videoFilter += fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=decrease,setsar=1,pad=%d:%d:(ow-iw)/2:(oh-ih)/2[v%d];",
+					v.width, v.height, v.width, v.height, i)
+				audioFilter += fmt.Sprintf("[a%d];", i)
+
+				filterComplex += videoFilter + audioFilter
 			}
 
 			// Build concat part with video and audio streams
 			for i := 0; i < len(videoPaths); i++ {
-				filterComplex += fmt.Sprintf("[v%d][%d:a:0]", i, i)
+				filterComplex += fmt.Sprintf("[v%d][a%d]", i, i)
 			}
 
 			// Add concat filter
@@ -181,7 +203,9 @@ func (v *EditableVideo) commandLine(output string) []string {
 			music := v.backgroundMusic
 
 			// Calculate total video duration including intro and outro
-			totalDuration := v.duration
+			// Use trimmed duration for main video (v.end - v.start)
+			mainVideoDuration := v.end - v.start
+			totalDuration := mainVideoDuration
 
 			// Add intro duration if present
 			if hasIntro {

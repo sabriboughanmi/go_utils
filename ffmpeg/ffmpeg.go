@@ -715,6 +715,16 @@ func (v *Video) SetEnd(end time.Duration) {
 	}
 }
 
+// SetDuration sets the duration of the output video in seconds from the current start time.
+// This effectively trims the video to the specified duration.
+// For example, SetDuration(30) will trim the video to 30 seconds starting from the current start time.
+func (v *EditableVideo) SetDuration(duration time.Duration) {
+	newEnd := v.start + duration
+	// Cast to *Video to access clampToDuration method
+	videoPtr := (*Video)(v)
+	v.end = videoPtr.clampToDuration(newEnd)
+}
+
 // SetFPS sets the framerate (frames per second) of the output video.
 func (v *Video) SetFPS(fps int) {
 	v.fps = fps
@@ -862,8 +872,10 @@ func (v *EditableVideo) SetMusicVolumeForMain(volume float32, transition VolumeT
 		}
 	}
 
-	// Calculate end time (main video duration + intro)
-	endTime = startTime + v.duration
+	// Calculate end time (trimmed main video duration + intro)
+	// Use v.end - v.start to account for any trimming via SetDuration
+	mainVideoDuration := v.end - v.start
+	endTime = startTime + mainVideoDuration
 
 	segment := VolumeSegment{
 		StartTime:          startTime,
@@ -894,7 +906,9 @@ func (v *EditableVideo) SetMusicVolumeForOutro(volume float32, transition Volume
 			startTime += introVideo.duration
 		}
 	}
-	startTime += v.duration
+	// Use trimmed main video duration (v.end - v.start) to account for any trimming via SetDuration
+	mainVideoDuration := v.end - v.start
+	startTime += mainVideoDuration
 
 	// Calculate end time (start + outro duration)
 	if v.outroPath != nil {
